@@ -2,6 +2,8 @@ import os
 import subprocess
 import tempfile
 
+from pkg_resources import resource_filename
+
 from svsim.util import calculate_num_reads, get_genome_length
 from svsim.reads.isim import IReadSimulator
 
@@ -13,7 +15,8 @@ class MetaSimSimulator( IReadSimulator ):
     # Constructor.
     #
     def __init__(self):
-        self.error_model = ""
+        self.error_model = resource_filename( "svsim", "data/errormodel-100bp.mconf" )
+        print self.error_model
 
     ##
     # @see IReadSimulator.simulate

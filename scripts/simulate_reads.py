@@ -18,11 +18,7 @@ from svsim.reads.dwgsim import DwgsimSimulator
 #
 def get_simulator(simulator):
     if simulator == "metasim":
-        script_dir = os.path.dirname( sys.argv[ 0 ] )
-        error_model_path = os.path.join( script_dir, "data/errormodel-100bp.mconf" )
-        metasim = MetaSimSimulator( )
-        metasim.error_model = error_model_path
-        return metasim
+        return MetaSimSimulator( )
     elif simulator == "dwgsim":
         return DwgsimSimulator( )
     else:
