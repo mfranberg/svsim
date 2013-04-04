@@ -55,6 +55,39 @@ As we can see the three C's has been deleted and the three G's has been duplicat
 
 This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given genome. To use this script you need to have MetaSim or dwgsim in your PATH.
 
+    usage: simulate_reads.py [-h] [-c C] [-m M] [-s S] -t {metasim,dwgsim}
+                             genome_file output_prefix
+    
+    Simulates illumina reads with metasim.
+    
+    usage: simulate_reads.py [-h] [-c C] [-m M] [-s S] -t {metasim,dwgsim}
+                             genome_file output_prefix
+    
+    Simulates illumina reads with metasim.
+    
+    positional arguments:
+      genome_file          Path to the genome
+      output_prefix        Output prefix for the paired end files, will apped
+                           _pe1.fa and pe2.fa to this.
+
+    optional arguments:
+      -h, --help           show this help message and exit
+      -c C                 Coverage.
+      -m M                 Mean of the library distribution.
+      -s S                 Standard deviation of the library distribution.
+      -t {metasim,dwgsim}  Type of simulator 'metasim' or 'dwgsim'.
+
+To simulate reads with metasim with default parameters do:
+
+    > python simulate_reads.py -t metasim genome.fa reads
+    
+This will produce reads_pe1.fa and reads_pe2.fa which are two fasta files.
+
+To simulate reads with 30 coverage, 400 mean insert size and 50 in standard deviation run:
+
+    > python simulate_reads.py -t metasim -c 30 -m 400 -s 50 genome.fa reads
+    
+This will again produce reads_pe1.fa and reads_pe2.fa.
 
 Note: MetaSim can be complicated to get working in your PATH. One way is to create a bash-script that forwards the command to the real MetaSim command. The script is called MetaSim and looks like:
 
@@ -65,4 +98,26 @@ Note: MetaSim can be complicated to get working in your PATH. One way is to crea
 
 
 ## map_reads.py
+
+This script maps paired reads with bwa. You need to have bwa in your path in order to run this script. To map the reads *reads_pe1.fa* and *reads_pe2.fa* to the reference genome *genome.fa* do:
+
+    > python map_reads.py reads_pe1.fa reads_pe2.fa genome.fa mapped_reads
+    
+This will produce the file mapped_reads.bam which is a sorted .bam file.
+
 ## svsim_pipeline.py
+
+All of the above scripts are combined in a single script called svsim_pipeline.py. To generate mapped reads for a normal (*genome.fa*) and mutated genome, where the mutated genome has structural variations defined in *variations.txt*, with 50 coverage and the default library distribution using *dwgsim* do:
+
+    > python svsim_pipeline.py -t dwgsim -c 50 genome.fa variations.txt output_dir/
+
+The ouput directory now contains the mutated genome, the unmapped read pairs and the mapped read pairs:
+
+    > ls output_dir/
+    indel_genome.fa
+    mapped_indel.bam
+    mapped_normal.bam
+    reads_indel_pe1.fa
+    reads_indel_pe2.fa
+    reads_normal_pe1.fa
+    reads_normal_pe2.fa
