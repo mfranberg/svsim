@@ -85,4 +85,4 @@ if __name__ == '__main__':
     
     normal_genome = read_genome( args.genome_file )
     variations = read_variations( args.variation_file )
-    write_genomes( normal_genome, variations, args.output_path ) 
+    write_donor_genome( normal_genome, variations, args.output_path ) 
