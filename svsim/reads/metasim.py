@@ -1,3 +1,4 @@
+import fnmatch
 import os
 import subprocess
 import tempfile
@@ -16,7 +17,6 @@ class MetaSimSimulator( IReadSimulator ):
     #
     def __init__(self):
         self.error_model = resource_filename( "svsim", "data/errormodel-100bp.mconf" )
-        print self.error_model
 
     ##
     # @see IReadSimulator.simulate
@@ -40,9 +40,12 @@ class MetaSimSimulator( IReadSimulator ):
                            "-d", output_dir,
                            genome_path ], stdout = open( "/dev/null", "w" ) )
 
-        metasim_output_name = os.path.basename( genome_path ).split( "." )[ 0 ] + "-Empirical.fna"
-        metasim_output_path = os.path.join( output_dir, metasim_output_name )
-        convert_to_pe( metasim_output_path, output_file + "_pe1.fa", output_file + "_pe2.fa" )
+        # Metasim outputs reads for each contig, gather them into one file
+        for i, metasim_output_file in enumerate( os.listdir( output_dir ) ):
+            metasim_output_name = os.path.basename( genome_path ).split( "." )[ 0 ] + "-Empirical.*fna"
+            if fnmatch.fnmatch( metasim_output_file, metasim_output_name ):
+                metasim_output_file_absolute = os.path.join( output_dir, metasim_output_file )
+                convert_to_pe( metasim_output_file_absolute, output_file + "_pe1.fa", output_file + "_pe2.fa", append = i > 0 )
 
 ##
 # Converts a metasim output fasta file in which all reads are
@@ -52,10 +55,15 @@ class MetaSimSimulator( IReadSimulator ):
 # @param metasim_output_path An output file from metasim.
 # @param pe1_path The path to fasta file that will contain the first read.
 # @param pe2_path The path to fasta file that will contain the second read.
+# @param append Determines whether to append to the output files instead.
 #
-def convert_to_pe(metasim_output_path, pe1_path, pe2_path):
-    output_pe1 = open( pe1_path, "w" )
-    output_pe2 = open( pe2_path, "w" )
+def convert_to_pe(metasim_output_path, pe1_path, pe2_path, append = False ):
+    open_type = "w"
+    if append:
+        open_type = "a"
+
+    output_pe1 = open( pe1_path, open_type )
+    output_pe2 = open( pe2_path, open_type )
     output_file = None
 
     with open( metasim_output_path, "r" ) as metasim_output_file:

@@ -20,7 +20,7 @@ class DwgsimSimulator( IReadSimulator ):
                            "-2", str( int( self.read_length ) ),
                            "-c", "0",
                            genome_path,
-                           output_prefix ], stdout = open( "/dev/null", "w" ) )
+                           output_prefix ], stdout = open( "/dev/null" ), stderr = open( "/dev/null" ) )
 
         subprocess.call( [ "cp", output_prefix + ".bwa.read1.fastq", output_file + "_pe1.fa" ] )
         subprocess.call( [ "cp", output_prefix + ".bwa.read2.fastq", output_file + "_pe2.fa" ] )
