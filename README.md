@@ -1,11 +1,11 @@
 # svsim
 
-The svsim package provides a collection of tools for simulating structural variations. Specifically it automates the process of generating structural variations in a given reference genome, simulating reads from that genome and mapping those reads back to the reference genome.
+The svsim package provides a collection of tools for simulating structural variations. Specifically it automates the process of generating structural variations in given reference contigs, simulating reads from the donor contigs and mapping those reads back to the reference genome.
 
 The toolbox consists of the following scripts:
 * *simulate_genome.py*, generates a synthetic genome from given base pair frequencies.
-* *create_indel_genome.py*, takes a genome and inserts structural variations in it.
-* *simulate_reads.py*, simulates reads with metasim or dwgas from a given genome.
+* *create_donor_contigs.py*, takes a a set of contigs and inserts structural variations in them.
+* *simulate_reads.py*, simulates reads with metasim or dwgas from given contigs.
 * *map_reads.py*, maps reads with bwa to a given reference genome.
 * *svsim_pipeline.py*, combines the previous 3 scripts into one.
 
@@ -19,41 +19,45 @@ If you want to change the base pair frequencies to be uniform, you can change th
 
     > python simulate_genome.py -p 0.2 0.3 0.3 0.2 10000 genome.fa
 
-## create_indel_genome.py
+## create_donor_contigs.py
 
-This script generates a genome with the given structural variations from a reference genome. The structural variations are specified in a custom file format that support 4 types of structural variations: insertion, deletion, duplication and translocation.
+This script generates contigs with the given structural variations from a set of reference contigs. The structural variations are specified in a custom file format that support 4 types of structural variations: insertion, deletion, duplication and translocation.
 
 Structural variations are defined by lines:
 
-    insertion start length
-    deletion start length
-    duplication start length to
-    translocation start length to
+    contig_name insertion start length
+    contig_name deletion start length
+    contig_name duplication start length to
+    contig_name translocation start length to
     
-where *start* is the start position of the variation in the reference genome, *length* is the length of the variation, and to is the location where the copied or removed segment will end up. It is not allowed to have overlapping structural variations. Start positions are always defined as one position before the actual variation.
+where *contig_name* is the name of a contig in the contig fasta file, *start* is the start position of the variation in the contig, *length* is the length of the variation, and to is the location where the copied or removed segment will end up. It is not allowed to have overlapping structural variations. Start positions are always defined as one position before the actual variation.
 
 I will illustrate this with an example. Let genome.fa be:
 
-    >my_genome
+    >contig1
     AAACCCGGGTTT
+    >contig2
+    AACCGGTT
     
 and variations.txt be:
 
-    deletion 3 3
-    duplication 6 3 9
+    contig1 deletion 3 3
+    contig1 duplication 6 3 9
     
 If we now run:
 
-    > python create_indel_genome.py genome.fa variations.txt indel_genome.fa
+    > python create_donor_contigs.py genome.fa variations.txt indel_genome.fa
     > cat indel_genome.fa
-    >mutated-donor
+    >contig1-donor
     AAAGGGGGGTTT
+    >contig2-donor
+    AACCGGTT
     
-As we can see the three C's has been deleted and the three G's has been duplicated.
+As we can see the three C's has been deleted and the three G's has been duplicated in contig1, the other contig is kept intact.
 
 ## simulate_reads.py
 
-This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given genome. To use this script you need to have MetaSim or dwgsim in your PATH.
+This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given set of contigs. To use this script you need to have MetaSim or dwgsim in your PATH.
 
     usage: simulate_reads.py [-h] [-c C] [-m M] [-s S] -t {metasim,dwgsim}
                              genome_file output_prefix
@@ -107,17 +111,17 @@ This will produce the file mapped_reads.bam which is a sorted .bam file.
 
 ## svsim_pipeline.py
 
-All of the above scripts are combined in a single script called svsim_pipeline.py. To generate mapped reads for a normal (*genome.fa*) and mutated genome, where the mutated genome has structural variations defined in *variations.txt*, with 50 coverage and the default library distribution using *dwgsim* do:
+All of the above scripts are combined in a single script called svsim_pipeline.py. To generate mapped reads for normal (*genome.fa*) and mutated contigs, where the mutated contigs has structural variations defined in *variations.txt*, with 50 coverage and the default library distribution using *dwgsim* do:
 
     > python svsim_pipeline.py -t dwgsim -c 50 genome.fa variations.txt output_dir/
 
-The ouput directory now contains the mutated genome, the unmapped read pairs and the mapped read pairs:
+The ouput directory now contains the mutated contigs, the unmapped read pairs and the mapped read pairs:
 
     > ls output_dir/
-    indel_genome.fa
-    mapped_indel.bam
+    donor_contigs.fa
+    mapped_donor.bam
     mapped_normal.bam
-    reads_indel_pe1.fa
-    reads_indel_pe2.fa
+    reads_donor_pe1.fa
+    reads_donor_pe2.fa
     reads_normal_pe1.fa
     reads_normal_pe2.fa
