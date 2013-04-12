@@ -30,7 +30,7 @@ Structural variations are defined by lines:
     contig_name duplication start length to
     contig_name translocation start length to
     
-where *contig_name* is the name of a contig in the contig fasta file, *start* is the start position of the variation in the contig, *length* is the length of the variation, and to is the location where the copied or removed segment will end up. It is not allowed to have overlapping structural variations. Start positions are always defined as one position before the actual variation.
+where *contig_name* is the name of a contig in the contig fasta file, *start* is the 0-based position of the base pair before the variation in the contig, *length* is the length of the variation, and *to* is the location where the copied or removed segment will end up. It is not allowed to have overlapping structural variations. Start positions are always defined as one position before the actual variation.
 
 I will illustrate this with an example. Let genome.fa be:
 
@@ -41,8 +41,8 @@ I will illustrate this with an example. Let genome.fa be:
     
 and variations.txt be:
 
-    contig1 deletion 3 3
-    contig1 duplication 6 3 9
+    contig1 deletion 2 3
+    contig1 duplication 6 3 8
     
 If we now run:
 
@@ -59,12 +59,12 @@ As we can see the three C's has been deleted and the three G's has been duplicat
 
 This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given set of contigs. To use this script you need to have MetaSim or dwgsim in your PATH.
 
-    usage: simulate_reads.py [-h] [-c C] [-m M] [-s S] -t {metasim,dwgsim}
+    usage: simulate_reads.py [-h] [-C C] [-m M] [-s S] -t {metasim,dwgsim}
                              genome_file output_prefix
     
     Simulates illumina reads with metasim.
     
-    usage: simulate_reads.py [-h] [-c C] [-m M] [-s S] -t {metasim,dwgsim}
+    usage: simulate_reads.py [-h] [-C C] [-m M] [-s S] -t {metasim,dwgsim}
                              genome_file output_prefix
     
     Simulates illumina reads with metasim.
@@ -76,7 +76,7 @@ This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or
 
     optional arguments:
       -h, --help           show this help message and exit
-      -c C                 Coverage.
+      -C C                 Coverage.
       -m M                 Mean of the library distribution.
       -s S                 Standard deviation of the library distribution.
       -t {metasim,dwgsim}  Type of simulator 'metasim' or 'dwgsim'.
@@ -89,7 +89,7 @@ This will produce reads_pe1.fa and reads_pe2.fa which are two fasta files.
 
 To simulate reads with 30 coverage, 400 mean insert size and 50 in standard deviation run:
 
-    > python simulate_reads.py -t metasim -c 30 -m 400 -s 50 genome.fa reads
+    > python simulate_reads.py -t metasim -C 30 -m 400 -s 50 genome.fa reads
     
 This will again produce reads_pe1.fa and reads_pe2.fa.
 
@@ -113,7 +113,7 @@ This will produce the file mapped_reads.bam which is a sorted .bam file.
 
 All of the above scripts are combined in a single script called svsim_pipeline.py. To generate mapped reads for normal (*genome.fa*) and mutated contigs, where the mutated contigs has structural variations defined in *variations.txt*, with 50 coverage and the default library distribution using *dwgsim* do:
 
-    > python svsim_pipeline.py -t dwgsim -c 50 genome.fa variations.txt output_dir/
+    > python svsim_pipeline.py -t dwgsim -C 50 genome.fa variations.txt output_dir/
 
 The ouput directory now contains the mutated contigs, the unmapped read pairs and the mapped read pairs:
 

@@ -2,22 +2,32 @@ import random
 from StringIO import StringIO
 
 ##
-# Represents a insertion of a sequence in the
-# genome starting at pos and ending at pos + length, either
-# from a another location from_loc or if -1 a random sequence.
+# Represents a insertion of a sequence in the reference
+# genome.
 #
 class Insertion:
+    ##
+    # Constructor.
+    #
+    # @param pos The 0-based position of the base pair before
+    #            the insertion in the refrence genome.
+    # @param length The length of the inserted sequence.
+    # @param from_loc The 0-based position from where the
+    #                 inserted sequence is taken. Can be -1
+    #                 then a random sequence is inserted.
+    #
     def __init__(self, pos, length, from_loc):
         self.pos = pos
         self.length = length
         self.from_loc = from_loc
+        if from_loc < 0:
+            self.sequence =  ''.join( random.choice( "ACGT" ) for i in range( self.length ) )
 
     def get_sequence(self, normal_genome):
         if self.from_loc >= 0:
-            return normal_genome[ self.from_loc:(self.from_loc + self.length) ] 
+            return normal_genome[ (self.from_loc + 1):(self.from_loc + 1 + self.length) ] 
         else:
-            bases = [ 'A','G','C','T' ]
-            return ''.join( random.choice( bases ) for i in range( self.length ) )
+            return self.sequence
 
     def get_delta(self):
         return 0
@@ -27,6 +37,13 @@ class Insertion:
 # genome starting at pos and ending at pos + length.
 #
 class Deletion:
+    ##
+    # Constructor.
+    #
+    # @param pos The 0-based position of the base pair before
+    #            the deletion in the reference genome.
+    # @param length Length of the deletion.
+    #
     def __init__(self, pos, length):
         self.pos = pos
         self.length = length
@@ -38,9 +55,15 @@ class Deletion:
         return self.length
 
 ##
-# Represents no variation on a stretch of the genome.
+# Represents a chunk of the reference genome.
 #
 class NullVariation:
+    ##
+    # Constructor.
+    #
+    # @param pos The 0-based start position of the chunk (inclusive).
+    # @param length The length of the chunk.
+    #
     def __init__(self, pos, length):
         self.pos = pos
         self.length = length
@@ -56,7 +79,7 @@ class NullVariation:
 # part of the genome is either has no varation (Null) or has
 # a variation (Insertion or Deletion). These chunks are then
 # sorted, and the sequence for the new genome can easily be found
-# by calling get_sequence on each variation in order.
+# by calling get_sequence on each chunk in order.
 #
 # @param variations List of variations.
 # @param genome_length Length of the genome.
@@ -69,10 +92,12 @@ def create_chunks(variations, genome_length):
 
     pos = 0
     for v in variations:
-        chunks.append( NullVariation( pos, v.pos - pos ) )
+        # Variations always point to the base pair before, and
+        # we want to include that in the null chunk.
+        chunks.append( NullVariation( pos, v.pos - pos + 1 ) )
         chunks.append( v )
        
-        pos += ( v.pos - pos ) + v.get_delta( )
+        pos += ( v.pos - pos + 1 ) + v.get_delta( )
 
     chunks.append( NullVariation( pos, genome_length - pos ) )
 
