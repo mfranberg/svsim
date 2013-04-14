@@ -41,11 +41,16 @@ class MetaSimSimulator( IReadSimulator ):
                            genome_path ], stdout = open( "/dev/null", "w" ) )
 
         # Metasim outputs reads for each contig, gather them into one file
+        found_match = False
         for i, metasim_output_file in enumerate( os.listdir( output_dir ) ):
             metasim_output_name = os.path.basename( genome_path ).split( "." )[ 0 ] + "-Empirical.*fna"
             if fnmatch.fnmatch( metasim_output_file, metasim_output_name ):
                 metasim_output_file_absolute = os.path.join( output_dir, metasim_output_file )
                 convert_to_pe( metasim_output_file_absolute, output_file + "_pe1.fa", output_file + "_pe2.fa", append = i > 0 )
+                found_match = True
+
+        if not found_match:
+            raise RuntimeError( "MetaSim could not simulate reads, is the genome too short?" )
 
 ##
 # Converts a metasim output fasta file in which all reads are
