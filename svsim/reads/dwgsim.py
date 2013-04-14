@@ -12,7 +12,7 @@ class DwgsimSimulator( IReadSimulator ):
     def simulate(self, genome_path, output_file):
         output_prefix = os.path.join( tempfile.mkdtemp( ), "dwgsim" )
 
-        subprocess.call( [ "dwgsim",
+        subprocess.check_call( [ "dwgsim",
                            "-d", str( int( self.mean ) ),
                            "-s", str( int( self.std ) ),
                            "-C", str( self.coverage ),
@@ -22,5 +22,5 @@ class DwgsimSimulator( IReadSimulator ):
                            genome_path,
                            output_prefix ], stdout = open( "/dev/null" ), stderr = open( "/dev/null" ) )
 
-        subprocess.call( [ "cp", output_prefix + ".bwa.read1.fastq", output_file + "_pe1.fa" ] )
-        subprocess.call( [ "cp", output_prefix + ".bwa.read2.fastq", output_file + "_pe2.fa" ] )
+        subprocess.check_call( [ "cp", output_prefix + ".bwa.read1.fastq", output_file + "_pe1.fa" ] )
+        subprocess.check_call( [ "cp", output_prefix + ".bwa.read2.fastq", output_file + "_pe2.fa" ] )

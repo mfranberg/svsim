@@ -35,15 +35,15 @@ def map_reads(pe1_path, pe2_path, genome_path, output_path):
     bwa_output = os.path.join( work_dir, "output.sam" )
 
     null = open( "/dev/null" )
-    subprocess.call( [ "bwa", "index", "-p", genome_db, genome_path ], stderr = null )
+    subprocess.check_call( [ "bwa", "index", "-p", genome_db, genome_path ], stderr = null )
     with open( pe1_output, "w" ) as pe1_file:
-        subprocess.call( [ "bwa", "aln", genome_db, pe1_path ], stdout = pe1_file, stderr = null )
+        subprocess.check_call( [ "bwa", "aln", genome_db, pe1_path ], stdout = pe1_file, stderr = null )
 
     with open( pe2_output, "w" ) as pe2_file:
-        subprocess.call( [ "bwa", "aln", genome_db, pe2_path ], stdout = pe2_file, stderr = null )
+        subprocess.check_call( [ "bwa", "aln", genome_db, pe2_path ], stdout = pe2_file, stderr = null )
     
     with open( bwa_output, "w" ) as bwa_file:
-        subprocess.call( [ "bwa", "sampe",
+        subprocess.check_call( [ "bwa", "sampe",
                            "-r", "@RG\tID:ILLUMINA\tSM:48_2\tPL:ILLUMINA\tLB:LIB1",
                            genome_db,
                            pe1_output, pe2_output,

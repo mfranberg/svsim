@@ -29,7 +29,7 @@ class MetaSimSimulator( IReadSimulator ):
         num_reads = calculate_num_reads( self.coverage, self.read_length, genome_length )
         output_dir = tempfile.mkdtemp( )
 
-        subprocess.call( [ "MetaSim", "cmd",
+        subprocess.check_call( [ "MetaSim", "cmd",
                            "-r", str( num_reads ), 
                            "-m",
                            "-g", self.error_model,
