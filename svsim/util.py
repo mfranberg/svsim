@@ -1,3 +1,5 @@
+import pyfasta
+
 ##
 # Calculate the number of reads required to get a certain coverage.
 #
@@ -11,14 +13,13 @@ def calculate_num_reads(coverage, read_length, genome_length):
     return int( ( genome_length * coverage ) / ( read_length * 2.0 ) )
 
 ##
-# Opens the given fasta file and calculates the length of the
-# genome.
+# Opens the given fasta file and calculates the total length
+# of all contigs.
 #
-# @param genome_path Path to a fasta file containing a single genome.
+# @param genome_path Path to a fasta file.
 #
 # @return The length of the genome.
 #
 def get_genome_length(genome_path):
-    with open( genome_path, "r" ) as genome_file:
-        next( genome_file ) # Skip header
-        return sum( len( line.strip( ) ) for line in genome_file )
+    genome_fasta = pyfasta.Fasta( genome_path )
+    return sum( len( genome_fasta[ contig ] ) for contig in genome_fasta.iterkeys( ) )
