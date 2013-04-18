@@ -1,10 +1,12 @@
 import fnmatch
+import logging
 import os
 import subprocess
 import tempfile
 
 from pkg_resources import resource_filename
 
+import svsim.log as log
 from svsim.util import calculate_num_reads, get_genome_length
 from svsim.reads.isim import IReadSimulator
 
@@ -29,6 +31,7 @@ class MetaSimSimulator( IReadSimulator ):
         num_reads = calculate_num_reads( self.coverage, self.read_length, genome_length )
         output_dir = tempfile.mkdtemp( )
 
+        logging.info( "Starting metasim:" )
         subprocess.check_call( [ "MetaSim", "cmd",
                            "-r", str( num_reads ), 
                            "-m",
@@ -38,7 +41,8 @@ class MetaSimSimulator( IReadSimulator ):
                            "--clones-mean", str( self.mean ),
                            "--clones-param2", str( self.std ),
                            "-d", output_dir,
-                           genome_path ], stdout = open( "/dev/null", "w" ) )
+                           genome_path ], stdout = log.get_log_stream( ) )
+
 
         # Metasim outputs reads for each contig, gather them into one file
         found_match = False
