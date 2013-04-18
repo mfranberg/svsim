@@ -102,6 +102,18 @@ def create_donor_contigs(normal_contig_path, variation_file, donor_contig_file, 
         else:
             write_donor_contig( sequence, contig_name, donor_contig_file )
 
+##
+# Adds the arguments relevant for generation of the
+# donor contigs.
+#
+# @param group An argument group to add options to.
+#
+def add_sv_arguments(group):
+    group.add_argument( '-d', dest="field_sep", type=str, help='The fasta identifier separator, default is |.', default="|" ) 
+    group.add_argument( '-i', dest="field_index", type=int, help='The 0-based index of field separated by field_sep that contains the relevant contig name.', default=0 ) 
+    group.add_argument( '-v', dest="vcf_file", type=vcf.open_vcf_file, help='Output file of the structural variations in VCF format.' )
+    group.add_argument( '-c', dest="chrom", type=str, help='Sets chromosome that will be written in the vcf file, name of the contig by default.' )
+
 
 USAGE = """Usage: create_donor_contigs normal_contig_file variation_file donor_contig_file"""
 
@@ -113,10 +125,9 @@ if __name__ == '__main__':
     parser.add_argument( 'normal_contig_file', type=str, help='Path to the normal contigs.' )
     parser.add_argument( 'variation_file', type=argparse.FileType( "r" ), help=VARIATION_USAGE )
     parser.add_argument( 'donor_contig_file', type=argparse.FileType( "w" ), help='Output file, the donor contigs will be written here.' )
-    parser.add_argument( '-s', dest="field_sep", type=str, help='The fasta identifier separator, default is |.', default="|" ) 
-    parser.add_argument( '-i', dest="field_index", type=int, help='The 0-based index of field separated by field_sep that contains the relevant contig name.', default=0 ) 
-    parser.add_argument( '-v', dest="vcf_file", type=vcf.open_vcf_file, help='Output file of the structural variations in VCF format.' )
-    parser.add_argument( '-c', dest="chrom", type=str, help='Sets chromosome that will be written in the vcf file, name of the contig by default.' )
+
+    add_sv_arguments( parser )
+
     args = parser.parse_args( )
 
     if args.vcf_file and args.chrom:

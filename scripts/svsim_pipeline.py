@@ -1,8 +1,8 @@
 import argparse
 import os
 
-from create_donor_contigs import create_donor_contigs
-from simulate_reads import get_simulator
+from create_donor_contigs import create_donor_contigs, add_sv_arguments
+from simulate_reads import get_simulator, add_simulator_arguments
 from map_reads import map_reads
 
 from svsim import vcf
@@ -12,14 +12,12 @@ if __name__ == '__main__':
     parser.add_argument( 'normal_contig_file', type=argparse.FileType('r'), help='Path to the reference genome.' )
     parser.add_argument( 'variation_file', type=argparse.FileType('r'), help='A file containg a list of variations to simulate.' )
     parser.add_argument( 'output_dir', type=str, help='The output directory, where final and transitory files will be stored.' )
-    parser.add_argument( '-t', type=str, choices=[ "metasim", "dwgsim" ], help='The simulator to use.', required=True )
-    parser.add_argument( '-m', type=float, help='Mean of the library.', default=500 )
-    parser.add_argument( '-s', type=float, help='Standard deviation of the library.', default=50 )
-    parser.add_argument( '-C', type=float, help='Coverage.', default=10.0 )
-    parser.add_argument( '-d', dest="field_sep", type=str, help='The field delimiter for the fasta identifier, default is |.', default="|" ) 
-    parser.add_argument( '-i', dest="field_index", type=int, help='The 0-based index of field separated by field_sep that contains the relevant contig name.', default=0 ) 
-    parser.add_argument( '-v', dest="vcf_file", type=vcf.open_vcf_file, help='Output file of the structural variations in VCF format.' )
-    parser.add_argument( '-c', dest="chrom", type=str, help='Sets chromosome that will be written in the vcf file, name of the contig by default.' )
+    
+    sim_group = parser.add_argument_group( title = "Simulation parameters", description = "Parameters that control the read simulation." )
+    add_simulator_arguments( sim_group )
+
+    sv_group = parser.add_argument_group( title = "Donor contig generation", description = "Parameters that control how donor contigs are generated" )
+    add_sv_arguments( sv_group )
 
     args = parser.parse_args( )
 
@@ -50,6 +48,7 @@ if __name__ == '__main__':
     simulator.mean = args.m
     simulator.std = args.s
     simulator.read_length = 100
+    simulator.read_error = args.r
 
     simulator.simulate( args.normal_contig_file.name, normal_reads_path )
     simulator.simulate( donor_contig_path, donor_reads_path )
