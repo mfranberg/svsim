@@ -16,7 +16,7 @@ class Insertion:
     #                 inserted sequence is taken. Can be -1
     #                 then a random sequence is inserted.
     #
-    def __init__(self, pos, length, from_loc):
+    def __init__(self, pos, length, from_loc = -1):
         self.pos = pos
         self.length = length
         self.from_loc = from_loc
@@ -25,7 +25,7 @@ class Insertion:
 
     def get_sequence(self, normal_genome):
         if self.from_loc >= 0:
-            return normal_genome[ (self.from_loc + 1):(self.from_loc + 1 + self.length) ] 
+            return normal_genome[ (self.from_loc):(self.from_loc + self.length) ] 
         else:
             return self.sequence
 

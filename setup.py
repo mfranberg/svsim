@@ -1,4 +1,20 @@
-from distutils.core import setup
+from distutils.core import setup, Command
+
+##
+# Simple command for running tests.
+# 
+class PyTest(Command):
+    user_options = []
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import sys,subprocess
+        errno = subprocess.call([sys.executable, 'runtests.py'])
+        raise SystemExit(errno)
 
 setup(
     name="svsim",
@@ -8,7 +24,8 @@ setup(
     package_data= { 'svsim': [ 'data/*.mconf' ] },
     license="Modified BSD",
     long_description = open( "README.md", "r" ).read( ),
-    url="http://www.example.com/",
+    url="https://www.github.com/fadern/svsim",
     maintainer="The svest team.",
-    maintainer_email="mattias.franberg@scilifelab.se"
+    maintainer_email="mattias.franberg@scilifelab.se",
+    cmdclass = { "test" : PyTest }
 )
