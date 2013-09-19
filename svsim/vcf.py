@@ -13,9 +13,9 @@ VCF_HEADER = """#fileformat=VCFv4.1
 #
 # @param Path to the file to open.
 #
-def open_vcf_file(path):
+def open_vcf_file(path, vcf_header = True):
     vcf_file = open( path, "w" )
-    return VCFFile( vcf_file )
+    return VCFFile( vcf_file, vcf_header )
 
 ##
 # Represents a line in the vcf file. The idea is to
@@ -90,7 +90,7 @@ class VCFFile:
     #
     # @param vcf_file A writeable file.
     #
-    def __init__(self, vcf_file):
+    def __init__(self, vcf_file, vcf_header = True):
         ##
         # The underlying file object.
         #
@@ -107,7 +107,8 @@ class VCFFile:
         #
         self.chrom = -1
 
-        self.vcf_file.write( VCF_HEADER )
+        if vcf_header:
+            self.vcf_file.write( VCF_HEADER )
 
     ##
     # Sets the name of the current chromosome.
