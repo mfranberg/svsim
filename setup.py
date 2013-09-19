@@ -27,5 +27,6 @@ setup(
     url="https://www.github.com/fadern/svsim",
     maintainer="The svest team.",
     maintainer_email="mattias.franberg@scilifelab.se",
-    cmdclass = { "test" : PyTest }
+    cmdclass = { "test" : PyTest },
+    requires = [ 'pyfasta (>=0.4.5)', 'pysam (>=0.6)']
 )
