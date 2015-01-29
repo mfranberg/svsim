@@ -1,4 +1,8 @@
-from distutils.core import setup, Command
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+import pkg_resources
 
 ##
 # Simple command for running tests.
@@ -18,14 +22,31 @@ class PyTest(Command):
 
 setup(
     name="svsim",
-    version="0.1dev",
-    package_dir = { "svsim" : "svsim" },
-    packages = ['svsim', 'svsim.reads'],
-    package_data= { 'svsim': [ 'data/*.mconf' ] },
-    license="Modified BSD",
+    version="0.2dev",
+    description = "Tool for simelating structural variations"
     long_description = open( "README.md", "r" ).read( ),
+    install_requires = [
+        'click'
+    ]
+    package_dir = { 
+        "svsim" : "svsim" 
+    },
+    packages = [
+        'svsim', 
+        'svsim.reads',
+        'svsim.commands'
+    ],
+    package_data= { 
+        'svsim': [ 'data/*.mconf' ] 
+    },
+    scripts = [
+        'scripts/svsim'
+    ],
+    license="Modified BSD",
     url="https://www.github.com/fadern/svsim",
     maintainer="The svest team.",
     maintainer_email="mattias.franberg@scilifelab.se",
-    cmdclass = { "test" : PyTest }
+    cmdclass = { 
+        "test" : PyTest 
+    }
 )
