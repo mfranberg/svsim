@@ -1,3 +1,4 @@
 include *.txt
 recursive-include svsim *.py
 recursive-include scripts *.py
+recursive-include examples *

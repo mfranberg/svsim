@@ -1,12 +1,13 @@
-try:
-    from setuptools import setup
+# try:
+from setuptools import setup, Command
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import setup, Command
+
 import pkg_resources
 
 ##
 # Simple command for running tests.
-# 
+#
 class PyTest(Command):
     user_options = []
     def initialize_options(self):
@@ -23,11 +24,14 @@ class PyTest(Command):
 setup(
     name="svsim",
     version="0.2dev",
-    description = "Tool for simelating structural variations"
+    description = "Tool for simelating structural variations",
     long_description = open( "README.md", "r" ).read( ),
     install_requires = [
-        'click'
-    ]
+        'click', 
+        'pyfasta',
+        'numpy',
+        'pysam'
+    ],
     package_dir = { 
         "svsim" : "svsim" 
     },

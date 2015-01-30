@@ -1,9 +1,14 @@
-import argparse
+
+from __future__ import unicode_literals, print_function
+
 import sys
+import os
+import click
 import random
-import os.path
+
 from StringIO import StringIO
 from collections import defaultdict
+from pprint import pprint as pp
 
 import pyfasta
 
@@ -48,14 +53,24 @@ def create_sv(variation_type, params):
         return None
 
 ##
-# Reads the variations defined in a file and returns
-# a them as a list of variation objects.
+# 
+# 
 #
-# @param variation_file A file that defines variations.
+# @param 
 #
-# @return A dict containing the variations for each contig.
+# @return 
 #
 def read_variations(variation_file):
+    """
+    Reads the variations defined in a file and returns
+    them as a list of variation objects.
+    
+    Args:
+        variation_file (file): A file that defines variations.
+    
+    Returns:
+        variations (dict): A dict containing the variations for each contig.
+    """
     variations = defaultdict( list )
     for line_number, line in enumerate( variation_file ):
         column = line.split( )
@@ -72,6 +87,8 @@ def read_variations(variation_file):
 
     return variations
 
+
+
 ##
 # Creates donor contigs that contains the given
 # variations, and writes them to an output file.
@@ -79,63 +96,66 @@ def read_variations(variation_file):
 # Note: If a contig does not have any variations it will
 #       still be written to the output file.
 #
-# @param normal_contig_path Path of the fasta file that contains normal contigs.
-# @param variation_file File that contains variations.
-# @param donor_contig_file Output file where the donor contigs will be written.
-#
-# @param field_index 0-based index of contig_name in the fasta identifier.
-# @param field_sep Field separator in the fasta identifier.
-# @param vcf_file If not None vcf data will be written to this file object.
-#
-def create_donor_contigs(normal_contig_path, variation_file, donor_contig_file, field_index = 0, field_sep = "|", vcf_file = None):
-    normal_contigs = pyfasta.Fasta( normal_contig_path, key_fn = lambda x: x.split( field_sep )[ field_index ].strip( ) )
+@click.command()
+@click.argument('normal_contig_file',
+                    type=click.Path(exists=True),
+)
+@click.argument('variation_file',
+                    type=click.File('r'),
+)
+@click.argument('output',
+                    type=click.File('w'),
+)
+@click.option('-d', '--delimiter',
+                    default='|',
+                    help='The fasta identifier separator, default is |.'
+)
+@click.option('-i', '--field_index',
+                    nargs=1,
+                    default=0,
+                    help='The 0-based index of field separated by field_sep that contains the relevant contig name.'
+)
+@click.option('-c', '--chrom',
+                    nargs=1,
+                    type=str,
+                    help='Sets chromosome that will be written in the vcf file, name of the contig by default.'
+)
+@click.option('-v', '--vcf_file',
+                    type=click.Path(exists=False),
+                    help='Output file of the structural variations in VCF format.'
+)
+def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
+    field_index, chrom, vcf_file):
+    """
+    Creates the donor contigs with structural variations.
+    
+    The format of variation_file are lines consisting of the following: 
+    contig_name insertion start length, contig_name deletion start length, 
+    contig_name duplication start length to or contig_name translocation start length to.
+    """
+    
+    if vcf_file and chrom:
+        vcf_file = vcf.open_vcf_file
+        vcf_file.set_chrom( args.chrom )
+    
+    normal_contigs = pyfasta.Fasta(
+                                normal_contig_file,
+                                key_fn = lambda x: x.split( delimiter )[ field_index ].strip( )
+                                )
+    
     variations = read_variations( variation_file )
-
+    
     for contig_name, sequence in normal_contigs.iteritems( ):
         contig_variations = variations.get( contig_name, None )
         if contig_variations:
             donor_contig = variation.create_indel_genome( sequence, contig_variations )
-            write_donor_contig( donor_contig, contig_name, donor_contig_file )
+            write_donor_contig( donor_contig, contig_name, output )
 
             if vcf_file:
                 vcf_file.write( contig_name, sequence, contig_variations )
         else:
-            write_donor_contig( sequence, contig_name, donor_contig_file )
+            write_donor_contig( sequence, contig_name, output )
 
-##
-# Adds the arguments relevant for generation of the
-# donor contigs.
-#
-# @param group An argument group to add options to.
-#
-def add_sv_arguments(group):
-    group.add_argument( '-d', dest="field_sep", type=str, help='The fasta identifier separator, default is |.', default="|" ) 
-    group.add_argument( '-i', dest="field_index", type=int, help='The 0-based index of field separated by field_sep that contains the relevant contig name.', default=0 ) 
-    group.add_argument( '-v', dest="vcf_file", type=vcf.open_vcf_file, help='Output file of the structural variations in VCF format.' )
-    group.add_argument( '-c', dest="chrom", type=str, help='Sets chromosome that will be written in the vcf file, name of the contig by default.' )
-
-
-USAGE = """Usage: create_donor_contigs normal_contig_file variation_file donor_contig_file"""
-
-VARIATION_USAGE = """Path to the variation file. The format of variation_file are lines consisting of the following: 
-contig_name insertion start length, contig_name deletion start length, contig_name duplication start length to or contig_name translocation start length to."""
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser( description=USAGE )
-    parser.add_argument( 'normal_contig_file', type=str, help='Path to the normal contigs.' )
-    parser.add_argument( 'variation_file', type=argparse.FileType( "r" ), help=VARIATION_USAGE )
-    parser.add_argument( 'donor_contig_file', type=argparse.FileType( "w" ), help='Output file, the donor contigs will be written here.' )
-
-    add_sv_arguments( parser )
-
-    args = parser.parse_args( )
-
-    if args.vcf_file and args.chrom:
-        args.vcf_file.set_chrom( args.chrom )
-
-    create_donor_contigs( args.normal_contig_file,
-                          args.variation_file,
-                          args.donor_contig_file,
-                          field_index = args.field_index,
-                          field_sep = args.field_sep,
-                          vcf_file = args.vcf_file )
+    create_donor_contigs()

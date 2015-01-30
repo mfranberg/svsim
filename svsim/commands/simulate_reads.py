@@ -1,8 +1,8 @@
-import argparse
-import os
-import subprocess
+
 import sys
-import tempfile
+import os
+
+import click
 
 from svsim.reads.metasim import MetaSimSimulator
 from svsim.reads.dwgsim import DwgsimSimulator
@@ -29,26 +29,53 @@ def get_simulator(simulator):
 #
 # @param group A parser group to add arguments to.
 #
-def add_simulator_arguments(group):
-    group.add_argument( '-C', type=float, help='Coverage.', default=10.0 )
-    group.add_argument( '-m', type=float, help='Mean of the library distribution.', default=550.0 )
-    group.add_argument( '-s', type=float, help='Standard deviation of the library distribution.', default=50.0 )
-    group.add_argument( '-t', type=str, choices=[ "metasim", "dwgsim" ], help="Type of simulator 'metasim' or 'dwgsim', default 'metasim'.", default="metasim" )
-    group.add_argument( '-r', type=float, help='Probability of a read error (not used in metasim).', default=0.02 )
+@click.command()
+@click.argument('genome_file',
+                    type=click.Path(exists=True),
+)
+@click.argument('output_prefix',
+                    type=click.Path(exists=False),
+)
+@click.option('-c', '--coverage',
+                    nargs=1,
+                    default=10.0,
+                    help="The medium coverage."
+)
+@click.option('-m', '--mean',
+                    nargs=1,
+                    default=550.0,
+                    help="Mean insert size of the library distribution."
+)
+@click.option('-s', '--standard_deviation',
+                    nargs=1,
+                    default=50.0,
+                    help="Standard deviation of the library distribution."
+)
+@click.option('-t', '--simulator',
+                    nargs=1,
+                    type=click.Choice(["metasim", "dwgsim"]),
+                    default='dwgsim',
+                    help="Type of simulator 'metasim' or 'dwgsim', default 'dwgsim'."
+)
+@click.option('-r', '--read_error_rate',
+                    nargs=1,
+                    default=0.02,
+                    help="Probability of a read error (not used in metasim)."
+)
+def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
+                    simulator, read_error_rate):
+    """
+    Simulate reads from a given genome.
+    """
+    simulator = get_simulator( simulator )
+    simulator.coverage = coverage
+    simulator.mean = mean
+    simulator.std = standard_deviation
+    simulator.read_length = 100
+    simulator.read_error = read_error_rate
+
+    simulator.simulate( genome_file, output_prefix )
+    
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser( description="Simulates illumina reads with metasim." )
-    parser.add_argument( 'genome_file', type=str, help='Path to the genome' )
-    parser.add_argument( 'output_prefix', type=str, help='Output prefix for the paired end files, will apped _pe1.fa and pe2.fa to this.' )
-    add_simulator_arguments( parser )
-
-    args = parser.parse_args( )
-
-    simulator = get_simulator( args.t )
-    simulator.coverage = args.C
-    simulator.mean = args.m
-    simulator.std = args.s
-    simulator.read_length = 100
-    simulator.read_error = args.r
-
-    simulator.simulate( args.genome_file, args.output_prefix )
+    simulate_reads()

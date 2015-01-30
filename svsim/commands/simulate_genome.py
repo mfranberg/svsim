@@ -1,6 +1,10 @@
-import argparse
+
+from __future__ import unicode_literals, print_function
+
 import sys
 import random
+
+import click
 
 ##
 # Generates base pairs according to the given
@@ -17,17 +21,20 @@ def generate_bp(probs, bp):
         if rand <= total:
             return bp[ i ]
 
-##
-# Generates the genome a returns it.
-#
-# @param probs Base pair probabilities.
-# @param length Length of the genome.
-#
-# @return The sequence of the generated genome.
-#
-def generate_genome(probs, length):
+def genome_generator(probabilities, length):
+    """
+    Generate bases with the given probabilities
+    
+    Args:
+        probabilities (list): A list with the probabilities for each nucleotide
+        length (int): The length of the genome
+    
+    Returns:
+        A generator that produces letters of [A,C,G,T]
+    """
     bp = "ACGT"
-    return ''.join( generate_bp( probs, bp ) for i in range( length ) )
+    for i in range( length ):
+        yield generate_bp( probabilities, bp )
 
 ##
 # Writes the genome to the given output file in
@@ -36,20 +43,39 @@ def generate_genome(probs, length):
 # @param genome Sequence of the genome to write.
 # @param output_file Output file to write the genome to.
 #
-def write_genome(genome, output_file):
+
+def write_genome(genome_generator, output_file):
     output_file.write( ">normal-genome\n" )
-    output_file.write( genome )
+    for base in genome_generator:
+        output_file.write( base )
     output_file.write( '\n' )
 
-USAGE = """Usage: simulate_genome length output_file"""
+
+@click.command()
+@click.argument('length',
+                    type=int
+)
+@click.argument('output',
+                    type=click.File('wb'),
+)
+@click.option('-f', '--frequencies',
+                    nargs=4,
+                    default=[0.25,0.25,0.25,0.25],
+                    help="List of frequencies for A, C, G and T respectively."
+)
+def simulate_genome(length, output, frequencies):
+    """
+    Simulates a genome from the given base probabilities..
+    """
+    frequencies = [float(frequency) for frequency in frequencies]
+    try:
+        assert( abs( sum( frequencies ) - 1.0 ) <= 0.001 )
+    except AssertionError:
+        print('The sum of the frequencies must equal 1', file=sys.stderr)
+        sys.exit()
+        
+    write_genome( genome_generator( frequencies, length ), output )
+    
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser( description="Simulates a genome from the given base probabilities." )
-    parser.add_argument( 'length', type=int, help='Path to the normal genome file.' )
-    parser.add_argument( '-p', type=float, nargs=4, help="List of frequencies for A, C, G and T respectively.", default=[0.25,0.25,0.25,0.25] )
-    parser.add_argument( 'output_file', type=argparse.FileType( 'w' ), help='Output path of the mutated genome.' )
-    args = parser.parse_args( )
-    
-    assert( abs( sum( args.p ) - 1.0 ) <= 0.001 )
-    genome = generate_genome( args.p, args.length )
-    write_genome( genome, args.output_file )
+    simulate_genome()
