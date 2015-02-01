@@ -24,7 +24,7 @@ import pkg_resources
 # map_reads, pipeline
 
 from svsim.commands import (create_donor_contigs, simulate_genome, simulate_reads,
-                            map_reads)
+                            map_reads, pipeline)
 
 if sys.version_info < (3,0):
     sys.stdout = getwriter('UTF-8')(sys.stdout)
@@ -68,7 +68,7 @@ svsim.add_command(simulate_genome)
 svsim.add_command(simulate_reads)
 svsim.add_command(map_reads)
 svsim.add_command(create_donor_contigs)
-# svsim.add_command(score_variants.score)
+svsim.add_command(pipeline)
 
 
 
