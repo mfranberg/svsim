@@ -60,6 +60,7 @@ def write_genome(genome_generator, output_file):
 )
 @click.option('-f', '--frequencies',
                     nargs=4,
+                    type=float,
                     default=[0.25,0.25,0.25,0.25],
                     help="List of frequencies for A, C, G and T respectively."
 )
@@ -67,7 +68,6 @@ def simulate_genome(length, output, frequencies):
     """
     Simulates a genome from the given base probabilities..
     """
-    frequencies = [float(frequency) for frequency in frequencies]
     try:
         assert( abs( sum( frequencies ) - 1.0 ) <= 0.001 )
     except AssertionError:
