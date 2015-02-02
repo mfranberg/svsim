@@ -15,13 +15,10 @@ from __future__ import unicode_literals
 import sys
 import os
 import click
+import pkg_resources
 
 from pprint import pprint as pp
-
 from codecs import getwriter
-
-import pkg_resources
-# map_reads, pipeline
 
 from svsim.commands import (create_donor_contigs, simulate_genome, simulate_reads,
                             map_reads, pipeline)
@@ -69,8 +66,6 @@ svsim.add_command(simulate_reads)
 svsim.add_command(map_reads)
 svsim.add_command(create_donor_contigs)
 svsim.add_command(pipeline)
-
-
 
 if __name__ == '__main__':
     svsim()
