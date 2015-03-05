@@ -1,5 +1,5 @@
-# try:
-from setuptools import setup, Command
+try:
+    from setuptools import setup, Command
 except ImportError:
     from distutils.core import setup, Command
 
