@@ -73,11 +73,14 @@ def write_genome(output_file, contigs, genome_name, probabilities):
                     default=[0.25,0.25,0.25,0.25],
                     help="List of probabilities for A, C, G and T respectively."
 )
+@click.option('-f', '--contig_file',
+                    type=click.File('r'),
+                    help="Specify contigs and their length in a tab separated file."
+)
 @click.option('-n', '--genome_name',
                     default='normal-genome',
                     help="Add a contig that should be included."
 )
-
 @click.option('-c', '--contig',
                     multiple=True,
                     default=['1'],
@@ -90,7 +93,7 @@ def write_genome(output_file, contigs, genome_name, probabilities):
                         "(in same order as the contigs are given).")
                     
 )
-def simulate_genome(output, probabilities, genome_name, contig, contig_length):
+def simulate_genome(output, probabilities, genome_name, contig, contig_length, contig_file):
     """
     Simulates a fasta genome from the given base probabilities.
     
@@ -112,6 +115,15 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length):
         print('Each contig must have a length', file=sys.stderr)
         sys.exit()
     contigs = {}
+    if contig_file:
+        try:
+            for line in contig_file:
+                line = line.rstrip().split()
+                if len(line) > 1:
+                    contigs[line[0]] = int(line[1])
+        except ValueError:
+            print("Contig length must be a integer.", file=sys.err)
+            sys.exit()
     for i, contig in enumerate(contig):
         contigs[contig] = int(contig_length[i])
     
