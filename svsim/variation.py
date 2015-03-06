@@ -1,79 +1,178 @@
 import random
 from StringIO import StringIO
 
-##
-# Represents a insertion of a sequence in the reference
-# genome.
-#
-class Insertion:
-    ##
-    # Constructor.
-    #
-    # @param pos The 0-based position of the base pair before
-    #            the insertion in the refrence genome.
-    # @param length The length of the inserted sequence.
-    # @param from_loc The 0-based position from where the
-    #                 inserted sequence is taken. Can be -1
-    #                 then a random sequence is inserted.
-    #
-    def __init__(self, pos, length, from_loc = -1):
+class StructuralVariation(object):
+    """Base class for structural variations"""
+    def __init__(self, contig, pos, length):
+        """
+        Arguments:
+            contig (str): The contig where the SV is located.
+            pos (int): The 0-based position of the base pair before
+                       the sv.
+            length (int): The length of the event.
+        """
+        super(StructuralVariation, self).__init__()
+        self.contig = contig
         self.pos = pos
         self.length = length
+    
+    def get_sequence(self, normal_genome):
+        return normal_genome[ self.pos:(self.pos + self.length) ]
+    
+    def get_delta(self):
+        return self.length
+    
+    def __repr__(self):
+        return "StructuralVariation(contig={0}, pos={1}, length={2})".format(
+            self.contig,
+            self.pos,
+            self.length
+        )
+    
+    # def __str__(self):
+    #     return "Contig:{0}\nPos:{1}\nLength:{2}\n".format(
+    #                                                     self.contig,
+    #                                                     self.pos,
+    #                                                     self.length
+    #                                                     )
+        
+class Insertion(StructuralVariation):
+    """
+    Represents a insertion of a sequence in the reference genome.
+    If from_loc == -1 a random sequence will be inserted.
+    Otherwise a sequence from the specified location is inserted
+    """
+    def __init__(self, contig, pos, length, from_loc = -1, from_contig=None):
+        """
+        Arguments:
+            from_loc (int): The 0-based position from where the
+                            inserted sequence is taken. Can be -1
+                            then a random sequence is inserted.
+        """
+        super(Insertion, self).__init__(contig, pos, length)
         self.from_loc = from_loc
+        if from_contig:
+            self.from_contig = from_contig
+        else:
+            self.from_contig = contig
+        
         if from_loc < 0:
             self.sequence =  ''.join( random.choice( "ACGT" ) for i in range( self.length ) )
-
+        
     def get_sequence(self, normal_genome):
         if self.from_loc >= 0:
             return normal_genome[ (self.from_loc):(self.from_loc + self.length) ] 
         else:
             return self.sequence
-
+        
     def get_delta(self):
         return 0
+    
+    def __repr__(self):
+        return "Insertion(contig={0}, pos={1}, length={2}), "\
+                "from_loc={3}, from_contig={4}".format(
+                                                    self.contig,
+                                                    self.pos,
+                                                    self.length,
+                                                    self.from_loc,
+                                                    self.from_contig
+                                                    )
+    
 
-##
-# Represents a deletion of a sequence in the
-# genome starting at pos and ending at pos + length.
-#
-class Deletion:
-    ##
-    # Constructor.
-    #
-    # @param pos The 0-based position of the base pair before
-    #            the deletion in the reference genome.
-    # @param length Length of the deletion.
-    #
-    def __init__(self, pos, length):
-        self.pos = pos
-        self.length = length
-
+class Deletion(StructuralVariation):
+    """
+    Represents a deletion of a sequence in the
+    genome starting at pos and ending at pos + length.
+    """
+    def __init__(self, contig, pos, length):
+        super(Deletion, self).__init__(contig, pos, length)
+    
     def get_sequence(self, normal_genome):
-        return [ ]
-
-    def get_delta(self):
-        return self.length
-
-##
-# Represents a chunk of the reference genome.
-#
-class NullVariation:
-    ##
-    # Constructor.
-    #
-    # @param pos The 0-based start position of the chunk (inclusive).
-    # @param length The length of the chunk.
-    #
-    def __init__(self, pos, length):
-        self.pos = pos
-        self.length = length
-
+        return []
+    
+    def __repr__(self):
+        return "Deletion(contig={0}, pos={1}, length={2})".format(
+            self.contig,
+            self.pos,
+            self.length
+        )
+    
+class Transversion(StructuralVariation):
+    """
+    Represents a transversion of a sequence in the
+    genome starting at pos and ending at pos + length.
+    """
+    def __init__(self, contig, pos, length):
+        super(Transversion, self).__init__(contig, pos, length)
+    
     def get_sequence(self, normal_genome):
-        return normal_genome[ self.pos:(self.pos + self.length) ]
+        return []
+    
+    def __repr__(self):
+        return "Transversion(contig={0}, pos={1}, length={2})".format(
+            self.contig,
+            self.pos,
+            self.length
+        )
+    
 
+class Duplication(StructuralVariation):
+    """
+    Represents a copy number variation of a sequence in the
+    genome starting at pos and ending at pos + length.
+    """
+    def __init__(self, contig, pos, length, nr_copies=1):
+        super(Duplication, self).__init__(contig, pos, length)
+        self.nr_copies = nr_copies
+    
+    def get_sequence(self, normal_genome):
+        return []
+    
+    def __repr__(self):
+        return "Duplication(contig={0}, pos={1}, length={2}, nr_copies={3})".format(
+            self.contig,
+            self.pos,
+            self.length,
+            self.nr_copies
+        )
+    
+
+class Translocation(StructuralVariation):
+    """
+    Represents a translocation of a sequence in the reference genome.
+    This means that a part of the genome has been moved.
+    """
+    def __init__(self, contig, pos, length, from_contig, from_loc):
+        """
+        Arguments:
+            from_contig (str): The contig from where the sequnce is taken.
+            
+            from_loc (int): The 0-based position from where the
+                            inserted sequence is taken.
+        """
+        super(Translocation, self).__init__(contig, pos, length)
+        self.from_loc = from_loc
+        self.from_contig = from_contig
+        
+    def get_sequence(self, normal_genome):
+        if self.from_loc >= 0:
+            return normal_genome[ (self.from_loc):(self.from_loc + self.length) ] 
+        else:
+            return self.sequence
+        
     def get_delta(self):
-        return self.length
-
+        return 0
+    
+    def __repr__(self):
+        return "Translocation(contig={0}, pos={1}, length={2}), "\
+                "from_loc={3}, from_contig={4}".format(
+                                                    self.contig,
+                                                    self.pos,
+                                                    self.length,
+                                                    self.from_loc,
+                                                    self.from_contig
+                                                    )
+    
 ##
 # Chunks the genome according the variations. So that each
 # part of the genome is either has no varation (Null) or has

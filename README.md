@@ -25,35 +25,107 @@ This script generates contigs with the given structural variations from a set of
 
 Structural variations are defined by lines:
 
-    contig_name insertion start length
-    contig_name deletion start length
-    contig_name duplication start length to
-    contig_name translocation start length to
+    <contig_name> <sv_type> <start> <length> (<copy_number>/<contig_from>) (<from_loc>)
+
+    contig_name (str): The contig where the sv is located
+    sv_type (str) in ["insertion", "deletion", "duplication", "translocation", "transversion"]
+    start (int): 0-based start position of sv
+    length (int): The length of the sv
+    copy_number (int): Number of times sequence is copied(Only for cnv)
+    contig_from (str): The contig where the new sequence comes from
+    from_loc (int): The start position for the new sequence
     
-where *contig_name* is the name of a contig in the contig fasta file, *start* is the 0-based position of the base pair before the variation in the contig, *length* is the length of the variation, and *to* is the location where the copied or removed segment will end up. It is not allowed to have overlapping structural variations. Start positions are always defined as one position before the actual variation.
+More specific the different types of structural variations are described in the following way.
+    
 
-I will illustrate this with an example. Let genome.fa be:
+### Deletion ###
 
+A part of the genome is deleted.
+
+    contig_name deletion start length
+
+### Transversion ###
+
+A part of the genome is flipped.
+
+    contig_name transversion start length
+
+    
+### Insertion ###
+
+An insertion in the genome. If contig_from and from_loc is skipped a random sequence is generated.
+
+    contig_name insertion start length (<contig_from>) (<from_loc>)
+    
+
+### Duplication ###
+
+A part of the genome is duplicated. If copy_number is skipped there will be one duplication.
+
+    contig_name duplication start length copy_number
+    
+
+### Translocation ###
+
+A part of the genome is cut out in one place and replaces another part of the genome.
+contig_from and from_loc specifies where a part is cut out.
+contig_name and start specifies the part that is replaced.
+
+    contig_name translocation start length contig_from from_loc
+    
+
+
+
+## Examples ##
+
+Let genome.fa be:
+
+```bash
+    > cat genome.fa
     >contig1
     AAACCCGGGTTT
     >contig2
     AACCGGTT
-    
-and variations.txt be:
+```
 
+###Deletion###
+
+
+```bash
+    > cat variations.txt
     contig1 deletion 2 3
-    contig1 duplication 6 3 8
-    
+``` 
+
 If we now run:
 
+```bash
     > svsim create_donor_contigs genome.fa variations.txt indel_genome.fa
     > cat indel_genome.fa
     >contig1-donor
-    AAAGGGGGGTTT
+    AAAGGGTTT
     >contig2-donor
     AACCGGTT
-    
-As we can see the three C's has been deleted and the three G's has been duplicated in contig1, the other contig is kept intact.
+```
+
+### Duplication ###
+
+
+```bash
+    > cat variations.txt
+    contig1 duplication 2 2 3 
+``` 
+
+This is a duplication of AC at positions 3-4 3 times, we get:
+
+```bash
+    > svsim create_donor_contigs genome.fa variations.txt duplication_genome.fa
+    > cat indel_genome.fa
+    >contig1-donor
+    AAACACACACCCGGGTTT
+    >contig2-donor
+    AACCGGTT
+```
+
 
 ## Simulate Reads
 

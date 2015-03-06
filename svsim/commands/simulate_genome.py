@@ -51,7 +51,7 @@ def write_genome(output_file, contigs, genome_name, probabilities):
     """
     for contig in contigs:
         contig_length = contigs[contig]
-        output_file.write(">{0} dna:chromosome chromosome:{1}:{0}:1:{2}:1 REF\n".format(
+        output_file.write(">{0}|dna:chromosome|chromosome:{1}:{0}:1:{2}:1|REF\n".format(
                                 contig,
                                 genome_name,
                                 contig_length
@@ -102,7 +102,7 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length, c
     genome_name is the name of the genome (default normal-genome).
     
     Each contig will get a header line in the fasta file that looks like:
-    ><contig> dna:chromosome chromosome:<genome_name>:<contig>:<start>:<stop>:1 REF
+    ><contig>|dna:chromosome|chromosome:<genome_name>:<contig>:<start>:<stop>:1|REF
     """
     try:
         assert( abs( sum( probabilities ) - 1.0 ) <= 0.001 )
