@@ -30,7 +30,9 @@ setup(
         'click', 
         'pyfasta',
         'numpy',
-        'pysam'
+        'pysam',
+        'interval_tree',
+        'logbook'
     ],
     package_dir = { 
         "svsim" : "svsim" 
