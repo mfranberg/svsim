@@ -2,19 +2,20 @@ import os
 import subprocess
 import tempfile
 import fnmatch
-import logging
 
 from pkg_resources import resource_filename
 
-import svsim.log as log
-from svsim.util import calculate_num_reads, get_genome_length
+from svsim.util import (calculate_num_reads, get_genome_length)
 
 class IReadSimulator(object):
     """
     Abstract base class for read simulators.
     """
-    def __init__(self):
+    def __init__(self, logger):
         super(IReadSimulator, self).__init__()
+        
+        self.logger = logger
+        self.logger.info("Initiating read simulator")
         ##
         # Genome coverage.
         #
@@ -45,17 +46,26 @@ class IReadSimulator(object):
             output_path (str): Path to file to write simulated reads to.
         """
         raise NotImplementedError( "ReadSimulator: Unimplemented abstract method." )
-
+    
+    def __repr__(self):
+        return "IReadSimulator(coverage={0}, read_length={1}, mean={2}, "\
+               "std={3})".format(
+                   self.coverage,
+                   self.read_length,
+                   self.mean,
+                   self.std
+               )
 
 class DwgsimSimulator(IReadSimulator):
     """Simulates reads using dwgsim with Illumina-like properties."""
-    def __init__(self):
-        super(DwgsimSimulator, self).__init__()
+    def __init__(self, logger):
+        super(DwgsimSimulator, self).__init__(logger)
     
     def simulate(self, genome_path, output_file):
         output_prefix = os.path.join(tempfile.mkdtemp(), "dwgsim")
-
+        
         read_error_rate = "{0}-{0}".format(self.read_error)
+        self.logger.info( "Starting dwgsim:" )
         subprocess.check_call(
             [ 
                 "dwgsim",
@@ -73,8 +83,9 @@ class DwgsimSimulator(IReadSimulator):
                 genome_path,
                 output_prefix 
             ], 
-            stdout = open("/dev/null"), 
-            stderr = open("/dev/null"))
+            stdout = subprocess.STDOUT, 
+            stderr = subprocess.STDOUT
+        )
         
         subprocess.check_call(
             [
@@ -90,22 +101,32 @@ class DwgsimSimulator(IReadSimulator):
                 output_file + "_pe2.fa"
             ]
         )
+    
+    def __repr__(self):
+        return "DwgsimSimulator(coverage={0}, read_length={1}, mean={2}, "\
+               "std={3})".format(
+                   self.coverage,
+                   self.read_length,
+                   self.mean,
+                   self.std
+               )
 
 class MetaSimSimulator(IReadSimulator):
     """Simulates reads using metasim."""
-    def __init__(self):
-        super(MetaSimSimulator, self).__init__()
+    def __init__(self, logger):
+        super(MetaSimSimulator, self).__init__(logger)
         self.error_model = resource_filename( "svsim", "data/errormodel-100bp.mconf" )
     
     def simulate(self, genome_path, output_file):
         if not self.read_length == 100:
-            raise ValueError("Read length must be 100 for metasim.")
+            self.logger.critical("Read length must be 100 for metasim.")
+            raise ValueError()
         
         genome_length = get_genome_length(genome_path)
         num_reads = calculate_num_reads(self.coverage, self.read_length, genome_length)
         output_dir = tempfile.mkdtemp()
         
-        logging.info( "Starting metasim:" )
+        self.logger.info( "Starting metasim:" )
         subprocess.check_call(
             [
                  "MetaSim", 
@@ -127,7 +148,7 @@ class MetaSimSimulator(IReadSimulator):
                 output_dir,
                 genome_path 
             ], 
-            stdout = log.get_log_stream()
+            stdout = self.logger
         )
         
         # Metasim outputs reads for each contig, gather them into one file
@@ -136,7 +157,7 @@ class MetaSimSimulator(IReadSimulator):
             metasim_output_name = os.path.basename(genome_path).split(".")[0] + "-Empirical.*fna"
             if fnmatch.fnmatch(metasim_output_file, metasim_output_name):
                 metasim_output_file_absolute = os.path.join(output_dir, metasim_output_file)
-                convert_to_pe(
+                self.convert_to_pe(
                                 metasim_output_file_absolute, 
                                 output_file + "_pe1.fa", 
                                 output_file + "_pe2.fa", 
@@ -145,44 +166,57 @@ class MetaSimSimulator(IReadSimulator):
                 found_match = True
         
         if not found_match:
-            raise RuntimeError( "MetaSim could not simulate reads, is the genome too short?" )
-
-def convert_to_pe(metasim_output_path, pe1_path, pe2_path, append = False ):
-    """
-    Converts a metasim output fasta file in which all reads are
-    in one file, to two separate files containg the first and second
-    pair respectively.
+            self.logger.critical("MetaSim could not simulate reads, "\
+                                 "is the genome too short?")
+            raise RuntimeError()
     
-    Arguments:
-        metasim_output_path (str): An output file from metasim.
-        pe1_path (str): The path to fasta file that will contain the first read.
-        pe2_path (str): The path to fasta file that will contain the second read.
-        append (bool): Determines whether to append to the output files instead.
-    """
-    open_type = "w"
-    if append:
-        open_type = "a"
+    def convert_to_pe(metasim_output_path, pe1_path, pe2_path, append = False ):
+        """
+        Converts a metasim output fasta file in which all reads are
+        in one file, to two separate files containg the first and second
+        pair respectively.
     
-    output_pe1 = open(pe1_path, open_type)
-    output_pe2 = open(pe2_path, open_type)
-    output_file = None
+        Arguments:
+            metasim_output_path (str): An output file from metasim.
+            pe1_path (str): The path to fasta file that will contain the first read.
+            pe2_path (str): The path to fasta file that will contain the second read.
+            append (bool): Determines whether to append to the output files instead.
+        """
+        open_type = "w"
+        if append:
+            open_type = "a"
     
-    with open(metasim_output_path, "r") as metasim_output_file:
-        for line in metasim_output_file:
-            columns = line.split()
+        output_pe1 = open(pe1_path, open_type)
+        output_pe2 = open(pe2_path, open_type)
+        output_file = None
+    
+        with open(metasim_output_path, "r") as metasim_output_file:
+            for line in metasim_output_file:
+                columns = line.split()
             
-            if columns[0].startswith(">"):
-                if output_file:
-                    output_file.write("\n")
+                if columns[0].startswith(">"):
+                    if output_file:
+                        output_file.write("\n")
                 
-                if columns[0].endswith(".1"):
-                    output_file = output_pe1
+                    if columns[0].endswith(".1"):
+                        output_file = output_pe1
+                    else:
+                        output_file = output_pe2
+                
+                    output_file.write(line)
                 else:
-                    output_file = output_pe2
-                
-                output_file.write(line)
-            else:
-                output_file.write(line.strip())
+                    output_file.write(line.strip())
     
-    output_pe1.close()
-    output_pe2.close()
+        output_pe1.close()
+        output_pe2.close()
+    
+    def __repr__(self):
+        return "MetaSimSimulator(coverage={0}, read_length={1}, mean={2}, "\
+               "std={3})".format(
+                   self.coverage,
+                   self.read_length,
+                   self.mean,
+                   self.std
+               )
+    
+

@@ -4,10 +4,13 @@ import os
 
 import click
 
-from svsim.reads.metasim import MetaSimSimulator
-from svsim.reads.dwgsim import DwgsimSimulator
+from logbook import Logger
+logger = Logger('simulate_reads logger')
 
-def get_simulator(simulator):
+from svsim.reads import (MetaSimSimulator, DwgsimSimulator)
+from svsim import init_log
+
+def get_simulator(simulator, logger):
     """
     Returns a simulator that can be used to simulate reads.
     
@@ -21,11 +24,12 @@ def get_simulator(simulator):
     
     """
     if simulator == "metasim":
-        return MetaSimSimulator()
+        return MetaSimSimulator(logger)
     elif simulator == "dwgsim":
-        return DwgsimSimulator()
+        return DwgsimSimulator(logger)
     else:
-        raise ValueError("No such simulator found")
+        logger.critical("No such simulator found")
+        raise ValueError()
 
 @click.command()
 @click.argument('genome_file',
@@ -60,14 +64,22 @@ def get_simulator(simulator):
                     default=0.02,
                     help="Probability of a read error (not used in metasim)."
 )
+@click.option('-l', '--logfile',
+                    type=click.Path(exists=False),
+                    help="Path to log file. If none logging is "\
+                          "printed to stderr."
+)
 def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
-                    simulator, read_error_rate):
+                    simulator, read_error_rate, logfile):
     """
     Simulate reads from a given genome.
     
     Adds arguments relevant to simulation to the parser.
     """
-    simulator = get_simulator(simulator)
+    log = init_log(logfile)
+    log.push_application()
+    
+    simulator = get_simulator(simulator, logger)
     simulator.coverage = coverage
     simulator.mean = mean
     simulator.std = standard_deviation
