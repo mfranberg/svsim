@@ -141,7 +141,7 @@ class Duplication(StructuralVariation):
         )
     
 
-def read_variations(variation_file, contigs):
+def read_variations(variation_file, contigs, logger):
     """
     Reads the variations defined in a file and returns
     them as a list of variation objects.
@@ -150,6 +150,7 @@ def read_variations(variation_file, contigs):
         variation_file (file): A file that defines variations.
         contigs (list): A list with the existing contigs from the
                         reference genome
+        logger (logger): An logbook object to print messages.
     
     Returns:
         variations (dict): A dictionary with contigs as keys and a list of 
@@ -165,18 +166,19 @@ def read_variations(variation_file, contigs):
         from_loc = -1
         # Test if the contig exists
         if contig_name not in contigs:
-            ##TODO Raise proper Error
-            print( "Error: Contig does not exist in "\
-                    "reference: {0}".format(line_number))
-            print("Skipping sv")
+            logger.warning("Contig does not exist in "\
+                    "reference.\n Skipping sv on line {0}".format(line_number))
             use_sv = False
         
         variation_type = column[1]
         
         if variation_type not in VARIATIONS:
-            print("Error: unknown variation: {0} on "\
-            "line number: {1}".format(variation_type, line_number))
-            print("Skipping sv")
+            logger.warning("Unknown variation: {0} at "\
+                    "line number: {1}.\n Skipping sv.".format(
+                                                        variation_type, 
+                                                        line_number
+                                                        )
+                                                    )
             use_sv = False
         
         position = int(column[2])
@@ -197,10 +199,12 @@ def read_variations(variation_file, contigs):
             # and one insertion
             use_sv = False
             if len(column) < 5:
-                print("Translocation must have contig_from and from_loc")
-                print("contig_from and or from_loc is missing in"\
-                        " line {0}".format(line_number))
-                print("Skipping sv")
+                logger.warning("Translocation must have contig_from and"\
+                " from_loc. contig_from and/or from_loc is missing at "\
+                "line number: {0}.\n Skipping sv.".format(
+                                                        line_number
+                                                        )
+                                                    )
             else:
                 contig_from = column[4]
                 from_loc = int(column[5])
@@ -275,7 +279,7 @@ def create_sv(variation_type, contig, pos, length, from_contig=None,
     else:
         return None
 
-def check_variations(variations):
+def check_variations(variations, logger):
     """
     Sort the variations and check if any of the variations overlap.
     Variations can not overlap, if any variations ovelap the program
@@ -283,7 +287,7 @@ def check_variations(variations):
     
     Arguments:
         variations (list): List of variation objects
-        contig (str): Name of the current contig
+        logger (logger): An logbook object to print messages.
     
     Returns:
         sorted_variations (list): A list of sorted variations
@@ -316,13 +320,13 @@ def check_variations(variations):
         interval_stop = interval_start + variation.length
         interval = [interval_start, interval_stop]
         if len(interval_tree.find_range(interval)) > 1:
-            print("Interval at contig {0}, position {1} is overlapping "\
+            logger.critical("Interval at contig {0}, position {1} is overlapping "\
                     "another interval. Pleast check your variations file."\
-                    "Variants are not allowed to overlap.\n Exiting...".format(
+                    "Variants are not allowed to overlap.\n Exiting.".format(
                         variation.contig,
                         variation.pos
                     ))
-            sys.exit()
+            sys.exit(1)
     
     return sorted(variations, key=lambda v: v.pos)
 

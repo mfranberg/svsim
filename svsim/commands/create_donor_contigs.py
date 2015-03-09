@@ -10,7 +10,11 @@ from pprint import pprint as pp
 from pyfasta import Fasta
 
 from svsim import (read_variations, create_sv, vcf, check_variations,
-                    write_donor_contigs)
+                    write_donor_contigs, init_log)
+
+from logbook import Logger
+
+logger = Logger('create_donor_contigs logger')
 
 
 @click.command()
@@ -45,8 +49,13 @@ from svsim import (read_variations, create_sv, vcf, check_variations,
                     type=click.Path(exists=False),
                     help='Output file of the structural variations in VCF format.'
 )
+@click.option('-l', '--logfile',
+                    type=click.Path(exists=False),
+                    help="Path to log file. If none logging is "\
+                          "printed to stderr."
+)
 def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
-    genome_name, field_index, chrom, vcf_file):
+    genome_name, field_index, chrom, vcf_file, logfile):
     """
     Creates the donor contigs with structural variations.
     
@@ -54,6 +63,10 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
     contig_name insertion start length, contig_name deletion start length, 
     contig_name duplication start length to or contig_name translocation start length to.
     """
+    
+    log = init_log(logfile)
+    log.push_application()
+    
     
     if vcf_file and chrom:
         vcf_file = vcf.open_vcf_file
@@ -68,18 +81,20 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
                     line.rstrip().split(delimiter)[0][1:]
                 )
     
-    
+    logger.info("Reading reference genome")
     normal_contigs = Fasta(
                             normal_contig_file,
                             key_fn = lambda x: x.split(delimiter)[field_index].strip( )
                             )
     
+    logger.info("Reading variations")
+    variations = read_variations(variation_file, sorted_contigs, logger)
     
-    variations = read_variations(variation_file, sorted_contigs)
-    
+    logger.info("Check if variations overlap")    
     for contig in variations:
-        variations[contig] = check_variations(variations[contig])
+        variations[contig] = check_variations(variations[contig], logger)
     
+    logger.info("Write donor contigs")
     write_donor_contigs(normal_contigs, variations, sorted_contigs, 
                         genome_name, output)
     
