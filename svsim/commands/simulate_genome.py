@@ -17,12 +17,12 @@ def generate_bp(probs, bp):
     Returns:
         base_pair (str): The generated basepair
     """
-    rand = random.random( )
+    rand = random.random()
     total = 0.0
-    for i in range( len( probs ) ):
-        total += probs[ i ]
+    for i in range(len(probs)):
+        total += probs[i]
         if rand <= total:
-            return bp[ i ]
+            return bp[i]
 
 def genome_generator(probabilities, length):
     """
@@ -36,8 +36,8 @@ def genome_generator(probabilities, length):
         A generator that produces letters of [A,C,G,T]
     """
     bp = "ACGT"
-    for i in range( length ):
-        yield generate_bp( probabilities, bp )
+    for i in range(length):
+        yield generate_bp(probabilities, bp)
 
 def write_genome(output_file, contigs, genome_name, probabilities):
     """
@@ -58,8 +58,8 @@ def write_genome(output_file, contigs, genome_name, probabilities):
                                 )
                             )
         for base in genome_generator(probabilities, contig_length):
-            output_file.write( base )
-        output_file.write( '\n' )
+            output_file.write(base)
+        output_file.write('\n')
     return
 
 
@@ -79,7 +79,7 @@ def write_genome(output_file, contigs, genome_name, probabilities):
 )
 @click.option('-n', '--genome_name',
                     default='normal-genome',
-                    help="Add a contig that should be included."
+                    help="The name of the genome."
 )
 @click.option('-c', '--contig',
                     multiple=True,
@@ -105,15 +105,17 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length, c
     ><contig>|dna:chromosome|chromosome:<genome_name>:<contig>:<start>:<stop>:1|REF
     """
     try:
-        assert( abs( sum( probabilities ) - 1.0 ) <= 0.001 )
+        assert(abs(sum(probabilities) - 1.0) <= 0.001)
     except AssertionError:
         print('The sum of the probabilities must equal 1', file=sys.stderr)
         sys.exit()
     try:
-        assert( len( contig ) == len( contig_length) )
+        assert(len(contig) == len(contig_length))
     except AssertionError:
         print('Each contig must have a length', file=sys.stderr)
         sys.exit()
+    print(contig)
+    sys.exit()
     contigs = {}
     if contig_file:
         try:
@@ -125,9 +127,9 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length, c
             print("Contig length must be a integer.", file=sys.err)
             sys.exit()
     for i, contig in enumerate(contig):
-        contigs[contig] = int(contig_length[i])
+        contigs[contig] = int( contig_length[i])
     
-    write_genome( output, contigs, genome_name, probabilities)
+    write_genome(output, contigs, genome_name, probabilities)
     
 
 if __name__ == '__main__':

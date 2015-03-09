@@ -1,15 +1,23 @@
 from svsim.variation import *
 
-##
-# Tests basic properties of the Insertion object.
-#
 def test_insertion():
-    insertion = Insertion( 2, 5, -1 )
-    assert len( insertion.get_sequence( "" ) ) == 5
-    assert insertion.get_delta( ) == 0
-
-    insertion = Insertion( 2, 2, 4 )
-    assert insertion.get_sequence( "ABCDEFGH" ) == "EF"
+    """
+    Tests basic properties of the Insertion object.
+    """
+    # Create a random insertion on contig '1', position 2
+    # with length 5
+    insertion = Insertion('1', 2, 5, -1)
+    assert insertion.contig == '1'
+    assert insertion.pos == 2
+    assert insertion.length == 5
+    assert insertion.from_contig == '1'
+    assert insertion.from_loc == '1'
+    # assert (insertion == ("Insertion(contig=1, pos=2, length=5, from_contig=1, from_loc=-1"))
+    # assert len( insertion.get_sequence( "" ) ) == 5
+    # assert insertion.get_delta( ) == 0
+    #
+    # insertion = Insertion( 2, 2, 4 )
+    # assert insertion.get_sequence( "ABCDEFGH" ) == "EF"
 
 ##
 # Tests basic properties of the Deletion object.
