@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 import fnmatch
+import shutil
 
 from pkg_resources import resource_filename
 
@@ -35,7 +36,7 @@ class IReadSimulator(object):
         # 
         self.std = 50
     
-    def simulate(genome_path, output_path):
+    def simulate(genome_path, output_path, second_genome=None):
         """
         Simulates reads from the given genome and writes them in the 
         given output file.
@@ -61,11 +62,11 @@ class DwgsimSimulator(IReadSimulator):
     def __init__(self, logger):
         super(DwgsimSimulator, self).__init__(logger)
     
-    def simulate(self, genome_path, output_file):
+    def simulate(self, genome_path, output_file, second_genome_path=None):
         output_prefix = os.path.join(tempfile.mkdtemp(), "dwgsim")
         
         read_error_rate = "{0}-{0}".format(self.read_error)
-        self.logger.info( "Starting dwgsim:" )
+        self.logger.info( "Starting dwgsim" )
         subprocess.check_call(
             [ 
                 "dwgsim",
@@ -81,26 +82,60 @@ class DwgsimSimulator(IReadSimulator):
                 "-R", "0",
                 "-y", "0",
                 genome_path,
-                output_prefix 
+                output_prefix
             ], 
-            stdout = subprocess.STDOUT, 
-            stderr = subprocess.STDOUT
+            stdout = open("/dev/null"), 
+            stderr = open("/dev/null")
         )
         
-        subprocess.check_call(
-            [
-                "cp", 
-                output_prefix + ".bwa.read1.fastq", 
-                output_file + "_pe1.fa"
+        if second_genome_path:
+            second_output_prefix = os.path.join(tempfile.mkdtemp(), "dwgsim2")
+            self.logger.info( "Starting dwgsim for second genome" )
+            subprocess.check_call(
+                [ 
+                    "dwgsim",
+                    "-d", str(int(self.mean)),
+                    "-s", str(int( self.std)),
+                    "-C", str(self.coverage),
+                    "-1", str(int(self.read_length)),
+                    "-2", str(int(self.read_length)),
+                    "-e", read_error_rate,
+                    "-E", read_error_rate,
+                    "-c", "0",
+                    "-r", "0",
+                    "-R", "0",
+                    "-y", "0",
+                    second_genome_path,
+                    second_output_prefix
+                ], 
+                stdout = open("/dev/null"), 
+                stderr = open("/dev/null")
+            )
+            
+            first_pair_files = [
+                output_prefix + ".bwa.read1.fastq",
+                second_output_prefix + ".bwa.read1.fastq"
             ]
-        )
-        subprocess.check_call(
-            [
-                "cp", 
-                output_prefix + ".bwa.read2.fastq", 
-                output_file + "_pe2.fa"
+            second_pair_files = [
+                output_prefix + ".bwa.read2.fastq",
+                second_output_prefix + ".bwa.read2.fastq"
             ]
-        )
+        else:
+            first_pair_files = [
+                output_prefix + ".bwa.read1.fastq"
+            ]
+            second_pair_files = [
+                output_prefix + ".bwa.read2.fastq"
+            ]
+            
+        with open(output_file + "_pe1.fa", 'w') as outfile_1:
+            for infile in first_pair_files:
+                shutil.copyfileobj(open(infile), outfile_1)
+        
+        with open(output_file + "_pe2.fa", 'w') as outfile_2:
+            for infile in first_pair_files:
+                shutil.copyfileobj(open(infile), outfile_2)
+            
     
     def __repr__(self):
         return "DwgsimSimulator(coverage={0}, read_length={1}, mean={2}, "\
@@ -117,7 +152,7 @@ class MetaSimSimulator(IReadSimulator):
         super(MetaSimSimulator, self).__init__(logger)
         self.error_model = resource_filename( "svsim", "data/errormodel-100bp.mconf" )
     
-    def simulate(self, genome_path, output_file):
+    def simulate(self, genome_path, output_file, second_genome=None):
         if not self.read_length == 100:
             self.logger.critical("Read length must be 100 for metasim.")
             raise ValueError()
@@ -148,7 +183,8 @@ class MetaSimSimulator(IReadSimulator):
                 output_dir,
                 genome_path 
             ], 
-            stdout = self.logger
+            stdout = open("/dev/null"),
+            stderr = open("/dev/null")
         )
         
         # Metasim outputs reads for each contig, gather them into one file

@@ -1,7 +1,9 @@
 
+
+from __future__ import (division)
 import sys
 import os
-
+import tempfile
 import click
 
 from logbook import Logger
@@ -33,14 +35,16 @@ def get_simulator(simulator, logger):
 
 @click.command()
 @click.argument('genome_file',
+                    nargs=-1,
                     type=click.Path(exists=True),
 )
 @click.argument('output_prefix',
+                    nargs=1,
                     type=click.Path(exists=False),
 )
 @click.option('-c', '--coverage',
                     nargs=1,
-                    default=10.0,
+                    default=20.0,
                     help="The medium coverage."
 )
 @click.option('-m', '--mean',
@@ -69,15 +73,36 @@ def get_simulator(simulator, logger):
                     help="Path to log file. If none logging is "\
                           "printed to stderr."
 )
+@click.option('-h', '--heterozygous',
+                    is_flag=True,
+                    help="Simulate heterozygous variations. This is done "\
+                         "by simulating reads from both donor contigs and "\
+                         "reference contigs."
+)
 def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
-                    simulator, read_error_rate, logfile):
+                    simulator, read_error_rate, logfile, heterozygous):
     """
     Simulate reads from a given genome.
     
     Adds arguments relevant to simulation to the parser.
+    If heterozygous is used please provide two genomes.
     """
     log = init_log(logfile)
     log.push_application()
+    
+    genome = genome_file[0]
+    second_genome = None
+    
+    if heterozygous:
+        if len(genome_file) != 2:
+            logger.critical("Provide two genomes when heterozygous is used. "\
+                            "Please see documentation")
+            sys.exit(1)
+        
+        logger.info('Simulating reads from two genomes to get heterozygosity')
+        second_genome = genome_file[1]
+        # We will try to simulate half of the reads from each genome
+        coverage = int(coverage/2)
     
     simulator = get_simulator(simulator, logger)
     simulator.coverage = coverage
@@ -86,7 +111,9 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
     simulator.read_length = 100
     simulator.read_error = read_error_rate
     
-    simulator.simulate(genome_file, output_prefix)
+    simulator.simulate(genome, output_prefix, second_genome)
+    
+    
     
 
 if __name__ == '__main__':
