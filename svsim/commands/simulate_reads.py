@@ -7,28 +7,26 @@ import click
 from svsim.reads.metasim import MetaSimSimulator
 from svsim.reads.dwgsim import DwgsimSimulator
 
-##
-# Returns a simulator that can be used to simulate reads.
-#
-# @param simulator A string representing the simulator to use,
-#                  either 'metasim' or 'dwgsim'.
-#
-# @return A matching simulator, or raises ValueError if no simulator
-#         was found.
-#
 def get_simulator(simulator):
+    """
+    Returns a simulator that can be used to simulate reads.
+    
+    Arguments:
+        simulator (str): A string representing the simulator to use,
+                        either 'metasim' or 'dwgsim'.
+    
+    Returns:
+        (simulator): A matching simulator, or raises ValueError if no 
+                     simulator was found.
+    
+    """
     if simulator == "metasim":
-        return MetaSimSimulator( )
+        return MetaSimSimulator()
     elif simulator == "dwgsim":
-        return DwgsimSimulator( )
+        return DwgsimSimulator()
     else:
-        raise ValueError( "No such simulator found" )
+        raise ValueError("No such simulator found")
 
-##
-# Adds arguments relevant to simulation to the parser.
-#
-# @param group A parser group to add arguments to.
-#
 @click.command()
 @click.argument('genome_file',
                     type=click.Path(exists=True),
@@ -66,15 +64,17 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
                     simulator, read_error_rate):
     """
     Simulate reads from a given genome.
+    
+    Adds arguments relevant to simulation to the parser.
     """
-    simulator = get_simulator( simulator )
+    simulator = get_simulator(simulator)
     simulator.coverage = coverage
     simulator.mean = mean
     simulator.std = standard_deviation
     simulator.read_length = 100
     simulator.read_error = read_error_rate
-
-    simulator.simulate( genome_file, output_prefix )
+    
+    simulator.simulate(genome_file, output_prefix)
     
 
 if __name__ == '__main__':

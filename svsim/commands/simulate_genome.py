@@ -138,10 +138,13 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length,
                 if len(line) > 1:
                     contigs[line[0]] = int(line[1])
         except ValueError:
-            logger.critical("Contig length must be a integer.", file=sys.err)
+            logger.critical("Contig length must be a integer.")
             sys.exit(1)
+    
     for i, contig in enumerate(contig):
         contigs[contig] = int( contig_length[i])
+    
+    logger.info("Writing simulated genome.")
     
     write_genome(output, contigs, genome_name, probabilities)
     
