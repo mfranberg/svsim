@@ -6,6 +6,12 @@ import random
 
 import click
 
+from logbook import Logger
+
+from svsim import init_log
+
+logger = Logger('simulate_genome logger')
+
 def generate_bp(probs, bp):
     """
     Generates base pairs according to the given distribution.
@@ -93,7 +99,13 @@ def write_genome(output_file, contigs, genome_name, probabilities):
                         "(in same order as the contigs are given).")
                     
 )
-def simulate_genome(output, probabilities, genome_name, contig, contig_length, contig_file):
+@click.option('-l', '--logfile',
+                    type=click.Path(exists=False),
+                    help="Path to log file. If none logging is "\
+                          "printed to stderr."
+)
+def simulate_genome(output, probabilities, genome_name, contig, contig_length, 
+                    contig_file, logfile):
     """
     Simulates a fasta genome from the given base probabilities.
     
@@ -104,18 +116,20 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length, c
     Each contig will get a header line in the fasta file that looks like:
     ><contig>|dna:chromosome|chromosome:<genome_name>:<contig>:<start>:<stop>:1|REF
     """
+    log = init_log(logfile)
+    log.push_application()
+    
     try:
         assert(abs(sum(probabilities) - 1.0) <= 0.001)
     except AssertionError:
-        print('The sum of the probabilities must equal 1', file=sys.stderr)
-        sys.exit()
+        logger.critical('The sum of the probabilities must equal 1')
+        sys.exit(1)
     try:
         assert(len(contig) == len(contig_length))
     except AssertionError:
-        print('Each contig must have a length', file=sys.stderr)
-        sys.exit()
-    print(contig)
-    sys.exit()
+        logger.critical('Each contig must have a length')
+        sys.exit(1)
+    
     contigs = {}
     if contig_file:
         try:
@@ -124,8 +138,8 @@ def simulate_genome(output, probabilities, genome_name, contig, contig_length, c
                 if len(line) > 1:
                     contigs[line[0]] = int(line[1])
         except ValueError:
-            print("Contig length must be a integer.", file=sys.err)
-            sys.exit()
+            logger.critical("Contig length must be a integer.", file=sys.err)
+            sys.exit(1)
     for i, contig in enumerate(contig):
         contigs[contig] = int( contig_length[i])
     
