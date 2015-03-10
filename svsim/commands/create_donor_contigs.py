@@ -64,9 +64,6 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
     contig_name duplication start length to or contig_name translocation start length to.
     """
     
-    log = init_log(logfile)
-    log.push_application()
-    
     
     if vcf_file and chrom:
         vcf_file = vcf.open_vcf_file
@@ -101,4 +98,6 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
 
 
 if __name__ == '__main__':
-    create_donor_contigs()
+    log_handler = init_log(logfile)
+    with log_handler.applicationbound():
+        create_donor_contigs()

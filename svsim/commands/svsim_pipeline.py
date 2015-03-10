@@ -1,14 +1,13 @@
 import click
-import logging
 import os
 
-# from svsim.commands import create_donor_contigs, add_sv_arguments
-# from simulate_reads import get_simulator, add_simulator_arguments
-# from map_reads import map_reads
 
 from svsim import vcf
 from svsim.commands import (create_donor_contigs, simulate_reads, map_reads)
 import svsim.log as log
+
+from logbook import Logger
+logger = Logger('svsim_pipeline logger')
 
 
 @click.command()
@@ -83,18 +82,19 @@ def pipeline(ctx, genome, variations, output_dir, delimiter, field_index,
     """
     
     # Set up logging
-    log.init_log( log_file )
-    if not os.path.exists( output_dir ):
-        os.makedirs( output_dir )
+    log = init_log(logfile)
+    log.push_application()
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     
-    donor_contig_path = os.path.join( output_dir, "donor_contigs.fa" )
-    normal_reads_path = os.path.join( output_dir, "reads_normal" )
-    donor_reads_path = os.path.join( output_dir, "reads_donor" )
-    normal_bwa_path = os.path.join( output_dir, "mapped_normal" )
-    donor_bwa_path = os.path.join( output_dir, "mapped_donor" )
+    donor_contig_path = os.path.join(output_dir, "donor_contigs.fa")
+    normal_reads_path = os.path.join(output_dir, "reads_normal")
+    donor_reads_path = os.path.join(output_dir, "reads_donor")
+    normal_bwa_path = os.path.join(output_dir, "mapped_normal")
+    donor_bwa_path = os.path.join(output_dir, "mapped_donor")
     # Create indel genome
-    logging.info( "Pipeline: Creating donor genome." )
-    with open( donor_contig_path, "w" ) as donor_contig_file:
+    logger.info("Creating donor genome.")
+    with open(donor_contig_path, "w") as donor_contig_file:
         ctx.invoke(create_donor_contigs,
                     normal_contig_file = genome,
                     variation_file = variations,
