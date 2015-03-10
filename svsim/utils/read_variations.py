@@ -1,5 +1,6 @@
+import sys
 from collections import defaultdict
-from svsim import create_sv
+# from svsim.variations import create_sv
 
 VARIATIONS = ("insertion", "deletion", "duplication", "translocation", 
                 "transversion")
@@ -21,7 +22,10 @@ def read_variations(variation_file, contigs, logger):
                           variation objects as values.
     """
     variations = defaultdict(list)
-    
+    print(create_sv)
+    print(type(create_sv))
+    print(create_sv('deletion', '1', 1, 1))
+    sys.exit()
     for line_number, line in enumerate(variation_file):
         use_sv = True
         column = line.split()

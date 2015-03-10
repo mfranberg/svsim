@@ -9,8 +9,9 @@ from pprint import pprint as pp
 
 from pyfasta import Fasta
 
-from svsim import (read_variations, create_sv, vcf, check_variations,
-                    write_donor_contigs, init_log)
+from svsim.variations import (read_variations, create_sv, check_variations)
+
+from svsim import (write_donor_contigs, init_log, vcf)
 
 import logging
 
@@ -21,7 +22,7 @@ import logging
 @click.argument('variation_file',
                     type=click.File('r'),
 )
-@click.argument('output',
+@click.argument('outfile',
                     type=click.File('w'),
 )
 @click.option('-d', '--delimiter',
@@ -57,7 +58,7 @@ import logging
                     default='INFO',
                     help="Set the level of log output."
 )
-def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
+def create_donor_contigs(normal_contig_file, variation_file, outfile, delimiter,
     genome_name, field_index, chrom, vcf_file, logfile, loglevel):
     """
     Creates the donor contigs with structural variations.
@@ -70,8 +71,6 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
     logger = logging.getLogger("svsim.create_donor_contigs")
     
     init_log(logger, logfile, loglevel)
-    
-    log_stream = get_log_stream(logger)
     
     if vcf_file and chrom:
         vcf_file = vcf.open_vcf_file
@@ -102,11 +101,8 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
     
     logger.info("Write donor contigs")
     write_donor_contigs(normal_contigs, variations, sorted_contigs, 
-                        genome_name, output)
+                        genome_name, outfile)
     
 
-
 if __name__ == '__main__':
-    log_handler = init_log(logfile)
-    with log_handler.applicationbound():
-        create_donor_contigs()
+    create_donor_contigs()

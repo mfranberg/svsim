@@ -40,6 +40,7 @@ setup(
     packages = [
         'svsim', 
         'svsim.reads',
+        'svsim.variations',
         'svsim.commands'
     ],
     package_data= { 

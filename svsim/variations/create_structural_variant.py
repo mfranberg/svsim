@@ -1,3 +1,4 @@
+import click
 from svsim.variations import (Insertion, Transversion, Deletion, Duplication)
 
 def create_sv(variation_type, contig, pos, length, from_contig=None, 
@@ -36,3 +37,12 @@ def create_sv(variation_type, contig, pos, length, from_contig=None,
     
     else:
         return None
+
+
+@click.command()
+def cli():
+    """docstring for cli"""
+    print(create_sv('insertion', '1', 1, 1))
+
+if __name__ == '__main__':
+    cli()

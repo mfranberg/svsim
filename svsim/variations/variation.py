@@ -1,8 +1,5 @@
 import random
 
-VARIATIONS = ("insertion", "deletion", "duplication", "translocation", 
-                "transversion")
-
 class StructuralVariation(object):
     """Base class for structural variations"""
     def __init__(self, contig, pos, length):
@@ -70,8 +67,8 @@ class Insertion(StructuralVariation):
         return 0
     
     def __repr__(self):
-        return "Insertion(contig={0}, pos={1}, length={2}), "\
-                "from_contig={3}, from_loc={4}".format(
+        return "Insertion(contig={0}, pos={1}, length={2}, "\
+                "from_contig={3}, from_loc={4})".format(
                                                     self.contig,
                                                     self.pos,
                                                     self.length,
