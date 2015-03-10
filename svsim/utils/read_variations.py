@@ -1,6 +1,7 @@
 import sys
+import click
 from collections import defaultdict
-# from svsim.variations import create_sv
+from svsim.variations import create_sv
 
 VARIATIONS = ("insertion", "deletion", "duplication", "translocation", 
                 "transversion")
@@ -22,10 +23,6 @@ def read_variations(variation_file, contigs, logger):
                           variation objects as values.
     """
     variations = defaultdict(list)
-    print(create_sv)
-    print(type(create_sv))
-    print(create_sv('deletion', '1', 1, 1))
-    sys.exit()
     for line_number, line in enumerate(variation_file):
         use_sv = True
         column = line.split()
@@ -76,6 +73,11 @@ def read_variations(variation_file, contigs, logger):
             else:
                 contig_from = column[4]
                 from_loc = int(column[5])
+                logger.debug("Creating {0} with arguments: contig_name={1}, "\
+                "position={1}, length={2}".format(
+                    'deletion', contig_from, from_loc, 
+                    )
+                )
                 variations[contig_from].append(
                     create_sv(
                                 'deletion',
@@ -84,6 +86,13 @@ def read_variations(variation_file, contigs, logger):
                                 length, 
                     )
                 )
+                logger.debug("Creating {0} with arguments: contig_name={1}, "\
+                "position={1}, length={2}, contig_from={3}, "\
+                "from_loc={4}".format(
+                    'insertion', contig_from, from_loc, 
+                    length, contig_from, from_loc
+                ))
+
                 variations[contig_name].append(
                     create_sv(
                                 'insertion',
@@ -96,6 +105,13 @@ def read_variations(variation_file, contigs, logger):
                 )
         
         if use_sv:
+            logger.debug("Creating {0} with arguments: contig_name={1}, "\
+            "position={1}, length={2}, contig_from={3}, "\
+            "from_loc={4}".format(
+                variation_type, contig_name, position, 
+                length, contig_from, from_loc, nr_duplications
+            ))
+            
             variations[contig_name].append(
                         create_sv( 
                                     variation_type, 
@@ -109,3 +125,19 @@ def read_variations(variation_file, contigs, logger):
                             )
     
     return variations
+
+@click.command()
+@click.argument('variations_file',
+                    type=click.File('r'),
+)
+def cli(variations_file):
+    """docstring for cli"""
+    contigs = ['1']
+    logger = 'hej'
+    variations = read_variations(variations_file, contigs, logger)
+    print(variations)
+    
+    
+
+if __name__ == '__main__':
+    cli()

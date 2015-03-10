@@ -41,6 +41,7 @@ setup(
         'svsim', 
         'svsim.reads',
         'svsim.variations',
+        'svsim.utils',
         'svsim.commands'
     ],
     package_data= { 

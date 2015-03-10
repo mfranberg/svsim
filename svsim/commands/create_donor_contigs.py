@@ -9,9 +9,10 @@ from pprint import pprint as pp
 
 from pyfasta import Fasta
 
-from svsim.variations import (read_variations, create_sv, check_variations)
-
-from svsim import (write_donor_contigs, init_log, vcf)
+from svsim.utils import (read_variations, write_donor_contigs)
+from svsim.variations import (check_variations)
+from svsim.warnings import OverlappingFeaturesError
+from svsim import (init_log, vcf)
 
 import logging
 
@@ -97,8 +98,15 @@ def create_donor_contigs(normal_contig_file, variation_file, outfile, delimiter,
     
     logger.info("Check if variations overlap")    
     for contig in variations:
-        variations[contig] = check_variations(variations[contig], logger)
-    
+        try:
+            variations[contig] = check_variations(variations[contig], logger)
+        except OverlappingFeaturesError as e:
+            logger.critical("Interval at contig {0}, position {1} is overlapping "\
+                    "another interval. Pleast check your variations file."\
+                    " Exiting.".format(e.contig, e.position)
+                    )
+            sys.exit(1)
+            
     logger.info("Write donor contigs")
     write_donor_contigs(normal_contigs, variations, sorted_contigs, 
                         genome_name, outfile)

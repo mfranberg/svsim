@@ -42,7 +42,9 @@ def create_sv(variation_type, contig, pos, length, from_contig=None,
 @click.command()
 def cli():
     """docstring for cli"""
-    print(create_sv('insertion', '1', 1, 1))
+    small_insertion = create_sv('insertion', '1', 1, 1)
+    print(small_insertion)
+    
 
 if __name__ == '__main__':
     cli()

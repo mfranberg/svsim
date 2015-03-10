@@ -79,6 +79,12 @@ def get_simulator(simulator, logger):
                          "by simulating reads from both donor contigs and "\
                          "reference contigs."
 )
+@click.option('--loglevel',
+                    type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 
+                                        'CRITICAL']),
+                    default='INFO',
+                    help="Set the level of log output."
+)
 def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
                     simulator, read_error_rate, logfile, heterozygous):
     """
@@ -87,8 +93,9 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
     Adds arguments relevant to simulation to the parser.
     If heterozygous is used please provide two genomes.
     """
-    log = init_log(logfile)
-    log.push_application()
+    logger = logging.getLogger("svsim.simulate_reads")
+    
+    init_log(logger, logfile, loglevel)
     
     genome = genome_file[0]
     second_genome = None

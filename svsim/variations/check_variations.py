@@ -1,4 +1,5 @@
 from interval_tree import IntervalTree
+from svsim.warnings import OverlappingFeaturesError
 
 def check_variations(variations, logger):
     """
@@ -41,12 +42,7 @@ def check_variations(variations, logger):
         interval_stop = interval_start + variation.length
         interval = [interval_start, interval_stop]
         if len(interval_tree.find_range(interval)) > 1:
-            logger.critical("Interval at contig {0}, position {1} is overlapping "\
-                    "another interval. Pleast check your variations file."\
-                    "Variants are not allowed to overlap.\n Exiting.".format(
-                        variation.contig,
-                        variation.pos
-                    ))
-            sys.exit(1)
+            raise OverlappingFeaturesError(variation.contig, variation.pos)
+
     
     return sorted(variations, key=lambda v: v.pos)

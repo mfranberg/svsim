@@ -1,4 +1,4 @@
-from svsim import variation
+from svsim.variations import variation
 
 # Header in the VCF file
 VCF_HEADER = """#fileformat=VCFv4.1
