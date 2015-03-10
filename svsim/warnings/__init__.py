@@ -1,0 +1,1 @@
+from svsim.warnings.exceptions import OverlappingFeaturesError
