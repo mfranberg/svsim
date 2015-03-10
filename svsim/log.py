@@ -23,7 +23,7 @@ def init_log(logger, filename=None, loglevel='INFO'):
     logger.addHandler(ch)
     
     if filename:
-        fi = logging.FileHandler(filename)
+        fi = logging.FileHandler(filename, encoding='utf-8')
         fi.setLevel(getattr(logging, loglevel))
         fi.setFormatter(formatter)
         logger.addHandler(fi)

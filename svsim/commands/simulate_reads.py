@@ -6,10 +6,10 @@ import os
 import tempfile
 import click
 
-from logbook import Logger
-logger = Logger('simulate_reads logger')
+import logging
 
 from svsim.reads import (MetaSimSimulator, DwgsimSimulator)
+from svsim.warnings import SimulatorNotFoundError
 from svsim import init_log
 
 def get_simulator(simulator, logger):
@@ -30,8 +30,7 @@ def get_simulator(simulator, logger):
     elif simulator == "dwgsim":
         return DwgsimSimulator(logger)
     else:
-        logger.critical("No such simulator found")
-        raise ValueError()
+        raise SimulatorNotFoundError(simulator)
 
 @click.command()
 @click.argument('genome_file',
@@ -86,11 +85,10 @@ def get_simulator(simulator, logger):
                     help="Set the level of log output."
 )
 def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
-                    simulator, read_error_rate, logfile, heterozygous):
+                    simulator, read_error_rate, logfile, heterozygous, loglevel):
     """
     Simulate reads from a given genome.
     
-    Adds arguments relevant to simulation to the parser.
     If heterozygous is used please provide two genomes.
     """
     logger = logging.getLogger("svsim.simulate_reads")
@@ -111,11 +109,21 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
         # We will try to simulate half of the reads from each genome
         coverage = int(coverage/2)
     
-    simulator = get_simulator(simulator, logger)
+    try:
+        simulator = get_simulator(simulator, logger)
+    except SimulatorNotFoundError as e:
+        logger.critical("No such simulator found: {0}".format(e.name))
+        sys.exit(1)
+    
+    logger.debug('Set simulator coverage to {0}'.format(coverage))
     simulator.coverage = coverage
+    logger.debug('Set simulator mean to {0}'.format(mean))
     simulator.mean = mean
+    logger.debug('Set simulator std deviation to {0}'.format(standard_deviation))
     simulator.std = standard_deviation
+    logger.debug('Set simulator read length to {0}'.format(100))
     simulator.read_length = 100
+    logger.debug('Set simulator read error rate to {0}'.format(read_error_rate))
     simulator.read_error = read_error_rate
     
     simulator.simulate(genome, output_prefix, second_genome)

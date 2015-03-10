@@ -7,6 +7,7 @@ import shutil
 from pkg_resources import resource_filename
 
 from svsim.util import (calculate_num_reads, get_genome_length)
+from svsim.log import get_log_stream
 
 class IReadSimulator(object):
     """
@@ -16,6 +17,8 @@ class IReadSimulator(object):
         super(IReadSimulator, self).__init__()
         
         self.logger = logger
+        self.log_stream = get_log_stream(logger)
+        
         self.logger.info("Initiating read simulator")
         ##
         # Genome coverage.
@@ -66,9 +69,8 @@ class DwgsimSimulator(IReadSimulator):
         output_prefix = os.path.join(tempfile.mkdtemp(), "dwgsim")
         
         read_error_rate = "{0}-{0}".format(self.read_error)
-        self.logger.info( "Starting dwgsim" )
-        subprocess.check_call(
-            [ 
+        self.logger.info("Starting dwgsim")
+        dwgsim_call = [
                 "dwgsim",
                 "-d", str(int(self.mean)),
                 "-s", str(int( self.std)),
@@ -83,16 +85,22 @@ class DwgsimSimulator(IReadSimulator):
                 "-y", "0",
                 genome_path,
                 output_prefix
-            ], 
-            stdout = open("/dev/null"), 
-            stderr = open("/dev/null")
+        ]
+        self.logger.debug("Running dwgsim with call {0}".format(
+            ' '.join(dwgsim_call)
+            )
+        )
+        
+        subprocess.check_call(
+            dwgsim_call, 
+            stdout = self.log_stream, 
+            stderr = self.log_stream
         )
         
         if second_genome_path:
             second_output_prefix = os.path.join(tempfile.mkdtemp(), "dwgsim2")
-            self.logger.info( "Starting dwgsim for second genome" )
-            subprocess.check_call(
-                [ 
+            self.logger.info("Starting dwgsim for second genome")
+            dwgsim_call2 = [
                     "dwgsim",
                     "-d", str(int(self.mean)),
                     "-s", str(int( self.std)),
@@ -107,9 +115,15 @@ class DwgsimSimulator(IReadSimulator):
                     "-y", "0",
                     second_genome_path,
                     second_output_prefix
-                ], 
-                stdout = open("/dev/null"), 
-                stderr = open("/dev/null")
+            ]
+            self.logger.debug("Running dwgsim with call {0}".format(
+                ' '.join(dwgsim_call2)
+                )
+            )
+            subprocess.check_call(
+                dwgsim_call2, 
+                stdout = self.log_stream, 
+                stderr = self.log_stream
             )
             
             first_pair_files = [
@@ -162,8 +176,7 @@ class MetaSimSimulator(IReadSimulator):
         output_dir = tempfile.mkdtemp()
         
         self.logger.info( "Starting metasim:" )
-        subprocess.check_call(
-            [
+        meta_sim_call = [
                  "MetaSim", 
                  "cmd",
                  "-r", 
@@ -182,9 +195,15 @@ class MetaSimSimulator(IReadSimulator):
                 "-d", 
                 output_dir,
                 genome_path 
-            ], 
-            stdout = open("/dev/null"),
-            stderr = open("/dev/null")
+        ]
+        self.logger.debug("Running metasim with call {0}".format(
+            ' '.join(meta_sim_call)
+            )
+        )
+        subprocess.check_call(
+            meta_sim_call, 
+            stdout = self.log_stream,
+            stderr = self.log_stream
         )
         
         # Metasim outputs reads for each contig, gather them into one file

@@ -1,1 +1,1 @@
-from svsim.warnings.exceptions import OverlappingFeaturesError
+from svsim.warnings.exceptions import (OverlappingFeaturesError, SimulatorNotFoundError)
