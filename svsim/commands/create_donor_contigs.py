@@ -77,7 +77,7 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
         vcf_file = vcf.open_vcf_file
         vcf_file.set_chrom(args.chrom)
     
-    # We need to keep the original sort order:
+    logger.debug("Getting original sort order of contigs from contig file")
     sorted_contigs = []
     with open(normal_contig_file, 'r') as f:
         for line in f:
@@ -91,6 +91,7 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
                             normal_contig_file,
                             key_fn = lambda x: x.split(delimiter)[field_index].strip( )
                             )
+    logger.debug("Reading reference genome done.")
     
     logger.info("Reading variations")
     variations = read_variations(variation_file, sorted_contigs, logger)
