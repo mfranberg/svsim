@@ -12,10 +12,7 @@ from pyfasta import Fasta
 from svsim import (read_variations, create_sv, vcf, check_variations,
                     write_donor_contigs, init_log)
 
-from logbook import Logger
-
-logger = Logger('create_donor_contigs logger')
-
+import logging
 
 @click.command()
 @click.argument('normal_contig_file',
@@ -54,8 +51,14 @@ logger = Logger('create_donor_contigs logger')
                     help="Path to log file. If none logging is "\
                           "printed to stderr."
 )
+@click.option('--loglevel',
+                    type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 
+                                        'CRITICAL']),
+                    default='INFO',
+                    help="Set the level of log output."
+)
 def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
-    genome_name, field_index, chrom, vcf_file, logfile):
+    genome_name, field_index, chrom, vcf_file, logfile, loglevel):
     """
     Creates the donor contigs with structural variations.
     
@@ -64,6 +67,11 @@ def create_donor_contigs(normal_contig_file, variation_file, output, delimiter,
     contig_name duplication start length to or contig_name translocation start length to.
     """
     
+    logger = logging.getLogger("svsim.create_donor_contigs")
+    
+    init_log(logger, logfile, loglevel)
+    
+    log_stream = get_log_stream(logger)
     
     if vcf_file and chrom:
         vcf_file = vcf.open_vcf_file

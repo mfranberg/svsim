@@ -27,7 +27,6 @@ def init_log(logger, filename=None, loglevel='INFO'):
         fi.setLevel(getattr(logging, loglevel))
         fi.setFormatter(formatter)
         logger.addHandler(fi)
-        logger.svsim_init = True
     
 
 # Note: I could not find a clean way to find the stream
@@ -37,21 +36,24 @@ def init_log(logger, filename=None, loglevel='INFO'):
 # is enabled for logging.INFO then sys.stdout will be
 # returned. In all other cases os.devnull will be returned.
 #
-def get_log_stream():
+def get_log_stream(logger):
     """
     Returns a stream to the root log file.
+    If there is no logfile return the stderr log stream
     
     Returns:
-        A stream to the root log file.
+        A stream to the root log file or stderr stream.
     """
-    log = logging.getLogger()
-    try:
-        if log.svsim_init and not log.disabled:
-            return log.handlers[0].stream
+    
+    file_stream = None
+    log_stream = None
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            file_stream = handler.stream
         else:
-            return open(os.devnull, "w")
-    except AttributeError:
-        if log.isEnabledFor(logging.INFO):
-            return sys.stdout
-        else:
-            return open(os.devnull, "w")
+            log_stream = handler.stream
+    
+    if file_stream:
+        return file_stream
+    
+    return log_stream
