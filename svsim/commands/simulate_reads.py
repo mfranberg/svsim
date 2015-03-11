@@ -95,7 +95,13 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
     
     init_log(logger, logfile, loglevel)
     
+    for f in genome_file:
+        if not os.path.exists(f):
+            logger.critical('Genome file does not exist: {0}'.format(f))
+            sys.exit()
+    
     genome = genome_file[0]
+    logger.debug('Genomes found: {0}'.format(genome))
     second_genome = None
     
     if heterozygous:

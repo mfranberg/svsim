@@ -141,10 +141,14 @@ class DwgsimSimulator(IReadSimulator):
             second_pair_files = [
                 output_prefix + ".bwa.read2.fastq"
             ]
+        
+        self.logger.debug("Merging files for first pair")
             
         with open(output_file + "_pe1.fa", 'w') as outfile_1:
             for infile in first_pair_files:
                 shutil.copyfileobj(open(infile), outfile_1)
+        
+        self.logger.debug("Merging files for second pair")
         
         with open(output_file + "_pe2.fa", 'w') as outfile_2:
             for infile in first_pair_files:
