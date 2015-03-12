@@ -20,6 +20,12 @@ class StructuralVariation(object):
         Takes the normal genome and return the appropriate segment.
         """
         return normal_genome[self.contig][self.pos:(self.pos + self.length)]
+
+    def get_delta(self):
+        """
+        Returns how much we move forward on the reference genome when this variant occurs.
+        """
+        return self.length
     
     def __repr__(self):
         return "StructuralVariation(contig={0}, pos={1}, length={2})".format(
@@ -54,14 +60,12 @@ class Insertion(StructuralVariation):
         The sequence of an insertion consists of the insertion followed by the
         reference sequence of the length.
         """
-        ref_seq = normal_genome[self.contig][(self.pos):(self.pos + self.length)]
-        
         if self.from_loc >= 0:
             insertion = normal_genome[self.from_contig][(self.from_loc):(self.from_loc + self.length)]
         else:
             insertion = self.sequence =  ''.join(random.choice( "ACGT" ) for i in range(self.length))
         
-        return insertion + ref_seq
+        return insertion
         
     def get_delta(self):
         return 0
@@ -87,7 +91,7 @@ class Deletion(StructuralVariation):
     
     def get_sequence(self, normal_genome):
         return ''
-    
+
     def __repr__(self):
         return "Deletion(contig={0}, pos={1}, length={2})".format(
             self.contig,

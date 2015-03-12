@@ -27,10 +27,10 @@ def write_donor_contigs(normal_contigs, variations, sorted_contigs,
                             )
         for variant in contig_variants:
             variant_start = variant.pos
-            variant_end = variant.pos + variant.length
-            #print the part of genome without svs
+            variant_end = variant.pos + variant.get_delta()
+            # Print the part of genome without svs
             outfile.write(normal_sequence[start_position:variant_start])
-            #then print the sv sequence
+            # Then print the sv sequence
             outfile.write(variant.get_sequence(normal_contigs))
             start_position = variant_end
         

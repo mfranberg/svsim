@@ -22,7 +22,7 @@ def check_variations(variations, logger):
     for variation in variations:
         i += 1
         interval_start = variation.pos
-        interval_stop = interval_start + variation.length
+        interval_stop = interval_start + variation.get_delta()
         interval_id = '_'.join(['id', str(i)])
         intervals.append(
             [
@@ -39,10 +39,9 @@ def check_variations(variations, logger):
     for variation in variations:
         # If features are overlapping we abbort
         interval_start = variation.pos
-        interval_stop = interval_start + variation.length
+        interval_stop = interval_start + variation.get_delta()
         interval = [interval_start, interval_stop]
         if len(interval_tree.find_range(interval)) > 1:
             raise OverlappingFeaturesError(variation.contig, variation.pos)
 
-    
     return sorted(variations, key=lambda v: v.pos)
