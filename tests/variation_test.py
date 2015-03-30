@@ -52,6 +52,16 @@ def test_transversion():
     assert transversion.get_sequence({'1':"ABCDEFGH"}) == "GFEDC"
     assert transversion.get_delta() == 5
 
+def test_duplication():
+    """
+    Tests basic properties of the Duplication object.
+    """
+    duplication = Duplication('1', 2, 3, 3)
+    assert isinstance(transversion,variation.Duplication)
+    
+    # assert transversion.get_sequence({'1':"ABCDEFGH"}) == "GFEDC"
+    # assert transversion.get_delta() == 5
+
 #
 # ##
 # # Tests that the reference genome is chunked properly.
