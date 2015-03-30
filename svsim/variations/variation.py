@@ -80,7 +80,6 @@ class Insertion(StructuralVariation):
                                                     self.from_loc
                                                     )
     
-
 class Deletion(StructuralVariation):
     """
     Represents a deletion of a sequence in the
