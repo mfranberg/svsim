@@ -1,4 +1,4 @@
-from svsim.variation import *
+from svsim.variations import *
 
 def test_insertion():
     """

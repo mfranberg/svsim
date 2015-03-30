@@ -1,5 +1,5 @@
 from svsim.vcf import *
-from svsim.variation import *
+from svsim.variations import *
 
 from StringIO import StringIO
 
