@@ -151,10 +151,9 @@ class DwgsimSimulator(IReadSimulator):
         self.logger.debug("Merging files for second pair")
         
         with open(output_file + "_pe2.fa", 'w') as outfile_2:
-            for infile in first_pair_files:
+            for infile in second_pair_files:
                 shutil.copyfileobj(open(infile), outfile_2)
-            
-    
+ 
     def __repr__(self):
         return "DwgsimSimulator(coverage={0}, read_length={1}, mean={2}, "\
                "std={3})".format(

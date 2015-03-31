@@ -36,11 +36,13 @@ def sam_to_bam(sam_path, bam_path):
 )
 @click.option('-pe1', '--pe1_path',
                     type=click.Path(exists=True),
-                    help='Path to the first pairs.'
+                    help='Path to the first pairs.',
+                    required=True
 )
 @click.option('-pe2', '--pe2_path',
                     type=click.Path(exists=True),
-                    help='Path to the second pairs.'
+                    help='Path to the second pairs.',
+                    required=True
 )
 @click.option('-l', '--logfile',
                     type=click.Path(exists=False),
@@ -67,93 +69,45 @@ def map_reads(pe1_path, pe2_path, genome, output, logfile, loglevel):
     init_log(logger, logfile, loglevel)
     
     log_stream = get_log_stream(logger)
-    
-    if not (pe1_path != None and pe1_path != None):
-        logger.error('Please provide paths to the read files with -pe1 and -pe2')
-        sys.exit(1)
-        
-    
+     
     logger.debug("Creating temporary directory.")
     work_dir = tempfile.mkdtemp()
     logger.debug("Temp dir is: {0}.".format(work_dir))
     genome_db = os.path.join(work_dir, "genome")
-    pe1_output = os.path.join(work_dir, "pe1.sai")
-    pe2_output = os.path.join(work_dir, "pe2.sai")
     bwa_output = os.path.join(work_dir, "output.sam")
     logger.debug("BWA output: {0}.".format(bwa_output))
+   
+    if not os.path.exists( genome_db + ".bwt" ):
+        logger.info("Running bwa index and mem in {0}".format(work_dir))
+        
+        bwa_index_call = [
+                            "bwa", 
+                            "index", 
+                            "-p", 
+                            genome_db, 
+                            genome
+                        ]
+        
+        logger.info("Running bwa index with command {0}".format(' '.join(bwa_index_call)))
+        
+        subprocess.check_call(bwa_index_call, stderr = log_stream)
+        
+        logger.debug("BWA index done")
     
-    logger.info("Running bwa index, aln and sampe in {0}".format(work_dir))
+    bwa_mem_call =["bwa", "mem", genome_db, pe1_path, pe2_path]
     
-    bwa_index_call = [
-                        "bwa", 
-                        "index", 
-                        "-p", 
-                        genome_db, 
-                        genome
-                    ]
-    
-    logger.info("Running bwa index with command {0}".format(' '.join(bwa_index_call)))
-    
-    subprocess.check_call(bwa_index_call, stderr = log_stream)
-    
-    logger.debug("BWA index done")
-    
-    bwa_aln_1_call =["bwa", "aln", genome_db, pe1_path]
-    
-    logger.debug("Running BWA align on first read pairs with command:{0}.".format(
-                    ' '.join(bwa_aln_1_call)
+    logger.debug("Running BWA align read pairs with command:{0}.".format(
+                    ' '.join(bwa_mem_call)
                     )
                 )
     
-    with open(pe1_output, "w") as pe1_file:
-        subprocess.check_call(
-                                bwa_aln_1_call, 
-                                stdout = pe1_file, 
-                                stderr = log_stream
-                            )
-    logger.debug("First read pair done.")
-    
-    bwa_aln_2_call =["bwa", "aln", genome_db, pe2_path]
-    
-    logger.debug("Running BWA align on second read pairs with command:{0}.".format(
-        ' '.join(bwa_aln_2_call)
-        )
-    )
-    
-    with open(pe2_output, "w") as pe2_file:
-        subprocess.check_call(
-                                bwa_aln_2_call, 
-                                stdout = pe2_file, 
-                                stderr = log_stream
-                            )
-    
-    logger.debug("Second read pair done.")
-    
-    bwa_sampe_call = [
-        "bwa", 
-        "sampe",
-        "-r", 
-        "@RG\tID:ILLUMINA\tSM:48_2\tPL:ILLUMINA\tLB:LIB1",
-        genome_db,
-        pe1_output, 
-        pe2_output,
-        pe1_path, 
-        pe2_path
-    ]
-    
-    logger.debug("Merging read pairs with command:{0}.".format(
-        ' '.join(bwa_sampe_call)
-        )
-    )
-    
     with open(bwa_output, "w") as bwa_file:
         subprocess.check_call(
-                                bwa_sampe_call, 
+                                bwa_mem_call, 
                                 stdout = bwa_file, 
                                 stderr = log_stream
                             )
-    
-    logger.debug("Merging read pairs done.")
+    logger.debug("Bwa mem done.") 
     
     logger.info("Converting .sam to .bam.")
     sam_to_bam(bwa_output, bwa_output + ".bam")

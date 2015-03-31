@@ -51,7 +51,7 @@ import logging
 )
 @click.option('-r', '--read_error_rate',
                     nargs=1,
-                    default=0.02,
+                    default=0.00,
                     help="Probability of a read error (not used in metasim)."
 )
 @click.option('-l', '--logfile',
@@ -86,10 +86,10 @@ def pipeline(ctx, genome, variations, output_dir, delimiter, field_index,
     """
     Run the svsim pipeline.
     
-    That is, a genome should already exist then this command will run:\n
-    svsim create_donor_contigs\n
-    svsim simulate_reads\n
-    svsim map_reads\n
+    That is, a genome should already exist then this command will run:
+    svsim create_donor_contigs
+    svsim simulate_reads
+    svsim map_reads
     """
     logger = logging.getLogger("svsim.pipeline")
     
@@ -104,14 +104,15 @@ def pipeline(ctx, genome, variations, output_dir, delimiter, field_index,
     donor_reads_path = os.path.join(output_dir, "reads_donor")
     normal_bwa_path = os.path.join(output_dir, "mapped_normal")
     donor_bwa_path = os.path.join(output_dir, "mapped_donor")
+
     # Create indel genome
     logger.info("Creating donor genome.")
     
     with open(donor_contig_path, "w") as donor_contig_file:
         ctx.invoke(create_donor_contigs,
-                    normal_contig_file = genome,
-                    variation_file = variations,
-                    outfile = donor_contig_file,
+                    normal_contig_file=genome,
+                    variation_file=variations,
+                    outfile=donor_contig_file,
                     delimiter=delimiter,
                     field_index=field_index,
                     chrom=chrom,
@@ -122,14 +123,13 @@ def pipeline(ctx, genome, variations, output_dir, delimiter, field_index,
     logger.debug("Donor genome created.")
     
     # Simulate reads
-
     logging.info("Simulating reads.")
     simulate_reads_input = [donor_contig_path]
     if heterozygous:
         simulate_reads_input.append(genome)
 
     ctx.invoke(simulate_reads,
-                    genome_file = simulate_reads_input,
+                    genome_file=simulate_reads_input,
                     output_prefix=donor_reads_path,
                     coverage=coverage,
                     mean=mean,
@@ -148,11 +148,11 @@ def pipeline(ctx, genome, variations, output_dir, delimiter, field_index,
     logging.info("Mapping reads.")
     
     ctx.invoke(map_reads,
-                 genome = genome,
-                 output = donor_bwa_path,
-                 pe1_path = donor_reads_path + "_pe1.fa", 
-                 pe2_path = donor_reads_path + "_pe2.fa",
-                 logfile = logfile,
+                 genome=genome,
+                 output=donor_bwa_path,
+                 pe1_path=donor_reads_path + "_pe1.fa", 
+                 pe2_path=donor_reads_path + "_pe2.fa",
+                 logfile=logfile,
                  loglevel=loglevel
                  )
     

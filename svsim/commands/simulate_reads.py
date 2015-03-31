@@ -1,5 +1,3 @@
-
-
 from __future__ import (division)
 import sys
 import os
@@ -133,9 +131,6 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
     simulator.read_error = read_error_rate
     
     simulator.simulate(genome, output_prefix, second_genome)
-    
-    
-    
 
 if __name__ == '__main__':
     simulate_reads()
