@@ -28,3 +28,22 @@ def get_genome_length(genome_path):
     genome_fasta = pyfasta.Fasta(genome_path)
     return sum(len(genome_fasta[contig]) for contig in genome_fasta.iterkeys())
 
+
+def get_genome_sequence(genome_path):
+    genome_fasta = pyfasta.Fasta(genome_path)
+    return [genome_fasta[contig] for contig in genome_fasta.iterkeys()]
+
+
+def reverse_complement(string):
+    """
+        Reverse complements a DNA string
+        Arguments:
+        string  - A DNA string
+        Returns:
+            A python string object that represents the
+            reverse complement of the input (DNA) string.
+    """
+    rev_nuc={'A':'T','C':'G','G':'C','T':'A','N':'N','X':'X', 
+    'a':'t', 't':'a','g':'c','c':'g'}
+    rev_comp = ''.join([rev_nuc[nucl] for nucl in reversed(string)])
+    return(rev_comp)

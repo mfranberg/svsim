@@ -3,10 +3,12 @@ import subprocess
 import tempfile
 import fnmatch
 import shutil
+import random
 
+from numpy.random import lognormal
 from pkg_resources import resource_filename
 
-from svsim.util import (calculate_num_reads, get_genome_length)
+from svsim.util import (calculate_num_reads, get_genome_length, get_genome_sequence, reverse_complement)
 from svsim.log import get_log_stream
 
 class IReadSimulator(object):
@@ -288,29 +290,34 @@ class LogNSimulator( IReadSimulator ):
     #
     def __init__(self, logger):
         super(LogNSimulator, self).__init__(logger)
-        if self.mean < 10 and  1 < self.std <  2: # Well defined distribution
-            pass
-        else: # user probably forgot that mu and std needs to be specified in log base
-            self.logger.critical("mu and std needs to be specified in log base (usually mu < 10 and 1 < sigma < 2).\
-                    You specified mean: {0}, sigma: {1}".format(self.mean, self.std))
-            raise ValueError()
 
 
     ##
     # @see IReadSimulator.simulate
     #
-    def simulate(self, genome_path, output_prefix):
+    def simulate(self, genome_path, output_prefix, second_genome=None):
         if not self.read_length == 100:
             self.logger.critical("Read length must be 100 for metasim.")
             raise ValueError()
+        if self.mean < 10 and  0 < self.std <  2: # Well defined distribution
+            pass
+        else: # user probably forgot that mu and std needs to be specified in log base
+            self.logger.critical("mu and std needs to be specified in log base (usually mu < 10 and 0 < sigma < 2).\
+                    You specified mean: {0}, sigma: {1}".format(self.mean, self.std))
+            raise ValueError()
 
-        genome_sequence = get_genome_sequence( genome_path )
+        all_sequences = get_genome_sequence( genome_path )
+        if len(all_sequences) != 1:
+            self.logger.critical("lognsim is only implemented for one genome sequence in the reference genome file.")
+            raise NotImplementedError()
+
+        genome_sequence = all_sequences[0]
         genome_length = len(genome_sequence)
         dna_library = DNAseq(self.read_length, self.coverage, mean=self.mean, stddev=self.std, distribution='lognormal')
         dna_library.simulate_pe_reads(genome_sequence)
 
-        reads1 = open(os.path.join(output_prefix, "_pe1.fa"),'w')
-        reads2 = open(os.path.join(output_prefix, "_pe2.fa"),'w')
+        reads1 = open(output_prefix + "_pe1.fa",'w')
+        reads2 = open(output_prefix + "_pe2.fa",'w')
         i=0
         for read in dna_library.fasta_format():
             if i%2==0:
@@ -350,7 +357,7 @@ class PairedEndRead(object):
         elif self.distribution == 'uniform':
             self.fragment_length = int(random.uniform(self.min_size,self.max_size))
         elif self.distribution == 'lognormal':
-            self.fragment_length = int(lognormal(self.mean, self.sigma)[0]) # one sample at a time to conform with the implementation...
+            self.fragment_length = int(lognormal(self.mean, self.sigma)) # one sample at a time to conform with the implementation...
 
         if self.fragment_length >= len(reference_sequence): 
             raise Exception("To short reference sequence length for \
