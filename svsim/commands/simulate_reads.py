@@ -6,7 +6,7 @@ import click
 
 import logging
 
-from svsim.reads import (MetaSimSimulator, DwgsimSimulator)
+from svsim.reads import (MetaSimSimulator, DwgsimSimulator, LogNSimulator)
 from svsim.warnings import SimulatorNotFoundError
 from svsim import init_log
 
@@ -27,6 +27,8 @@ def get_simulator(simulator, logger):
         return MetaSimSimulator(logger)
     elif simulator == "dwgsim":
         return DwgsimSimulator(logger)
+    elif simulator == "lognsim":
+        return LogNSimulator(logger)
     else:
         raise SimulatorNotFoundError(simulator)
 
@@ -56,7 +58,7 @@ def get_simulator(simulator, logger):
 )
 @click.option('-t', '--simulator',
                     nargs=1,
-                    type=click.Choice(["metasim", "dwgsim"]),
+                    type=click.Choice(["metasim", "dwgsim", "lognsim"]),
                     default='dwgsim',
                     help="Type of simulator 'metasim' or 'dwgsim', default 'dwgsim'."
 )

@@ -129,7 +129,7 @@ This is a duplication of AC at positions 3-4 3 times, we get:
 
 ## Simulate Reads
 
-This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given set of contigs. To use this script you need to have MetaSim or dwgsim in your PATH. (dwgsim is default)
+This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or [dwgsim](https://github.com/nh13/DWGSIM) to simulate reads from a given set of contigs. The program can also simulate reads from a lognormal distribution. To use this script you need to have MetaSim or dwgsim in your PATH. (dwgsim is default)
 
     > svsim simulate_reads genome_file output_prefix
     
@@ -145,7 +145,7 @@ This program uses [MetaSim](http://ab.inf.uni-tuebingen.de/software/metasim/) or
       -c, --coverage FLOAT            The medium coverage.
       -m, --mean FLOAT                Mean insert size of the library distribution.
       -s, --standard_deviation FLOAT  Standard deviation of the library distribution.
-      -t, --simulator [metasim|dwgsim] Type of simulator 'metasim' or 'dwgsim', default 'dwgsim'.
+      -t, --simulator [metasim|dwgsim|lognsim] Type of simulator 'metasim', 'dwgsim' or 'lognsim', default 'dwgsim'.
       -r, --read_error_rate FLOAT     Probability of a read error (not used in metasim).
       --help                          Show this message and exit.
 
@@ -161,12 +161,21 @@ To simulate reads with 30 coverage, 400 mean insert size and 50 in standard devi
     
 This will again produce reads_pe1.fa and reads_pe2.fa.
 
+To simulate reads from a log normal distribution run:
+
+    > ./svsim simulate_reads -c 9 -m 7.9 -s 0.59 -r 80 -t lognsim ~/tmp/genome ~/tmp/genome_reads
+
+This command will produce a library as shown in the figure below (usually the shape of nextera MP libraries). Remember that -m 7.9 -s 0.59 are specified in log space (see documentation on the logNormal distribution)
+
+![LogNormal shaped library](docs/figures/lognormal_isize.png)
+
 Note: MetaSim can be complicated to get working in your PATH. One way is to create a bash-script that forwards the command to the real MetaSim command. The script is called MetaSim and looks like:
 
     #!/bin/sh
     
     /Applications/metasim/MetaSim $*
     exit $?
+
 
 
 ## Map Reads

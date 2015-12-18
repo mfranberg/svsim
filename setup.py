@@ -42,7 +42,8 @@ setup(
         'svsim.reads',
         'svsim.variations',
         'svsim.utils',
-        'svsim.commands'
+        'svsim.commands',
+	'svsim.warnings'
     ],
     package_data= { 
         'svsim': [ 'data/*.mconf' ] 
