@@ -296,9 +296,6 @@ class LogNSimulator( IReadSimulator ):
     # @see IReadSimulator.simulate
     #
     def simulate(self, genome_path, output_prefix, second_genome=None):
-        if not self.read_length == 100:
-            self.logger.critical("Read length must be 100 for metasim.")
-            raise ValueError()
         if self.mean < 10 and  0 < self.std <  2: # Well defined distribution
             pass
         else: # user probably forgot that mu and std needs to be specified in log base

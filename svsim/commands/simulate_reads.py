@@ -62,10 +62,15 @@ def get_simulator(simulator, logger):
                     default='dwgsim',
                     help="Type of simulator 'metasim' or 'dwgsim', default 'dwgsim'."
 )
-@click.option('-r', '--read_error_rate',
+@click.option('-e', '--read_error_rate',
                     nargs=1,
                     default=0.02,
                     help="Probability of a read error (not used in metasim)."
+)
+@click.option('-r', '--read-length',
+                    nargs=1,
+                    default=100,
+                    help="Read length."
 )
 @click.option('-l', '--logfile',
                     type=click.Path(exists=False),
@@ -85,7 +90,7 @@ def get_simulator(simulator, logger):
                     help="Set the level of log output."
 )
 def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviation,
-                    simulator, read_error_rate, logfile, heterozygous, loglevel):
+                    simulator, read_error_rate, read_length, logfile, heterozygous, loglevel):
     """
     Simulate reads from a given genome.
     
@@ -128,7 +133,7 @@ def simulate_reads(genome_file, output_prefix, coverage, mean, standard_deviatio
     logger.debug('Set simulator std deviation to {0}'.format(standard_deviation))
     simulator.std = standard_deviation
     logger.debug('Set simulator read length to {0}'.format(100))
-    simulator.read_length = 100
+    simulator.read_length = read_length
     logger.debug('Set simulator read error rate to {0}'.format(read_error_rate))
     simulator.read_error = read_error_rate
     

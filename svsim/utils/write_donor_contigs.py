@@ -19,10 +19,8 @@ def write_donor_contigs(normal_contigs, variations, sorted_contigs,
         normal_sequence = normal_contigs[contig]
         contig_length = len(normal_sequence)
         
-        outfile.write(">{0}|dna:chromosome|chromosome:{1}:{0}:1:{2}:1|DONOR\n".format(
-                                contig,
-                                genome_name,
-                                contig_length
+        outfile.write(">{0}\n".format(
+                                contig
                                 )
                             )
         for variant in contig_variants:
